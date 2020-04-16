@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <glad/glad.h>
 
-#include "Window.h"
+#include <Hd/Window.h>
 
 static void framecallback(GLFWwindow* w, int width, int height);
 static void glfw_error_callback(int error, const char* description);
