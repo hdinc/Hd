@@ -14,13 +14,13 @@ public:
     void VSync(bool v);
     void SwapBuffers();
     void PollEvents();
+    void WaitEvents();
     bool ShouldClose();
 
 private:
     GLFWwindow* m_WindowId;
     bool m_Vsync = true;
 };
-
 
 inline bool Window::ShouldClose()
 {
@@ -35,6 +35,11 @@ inline void Window::SwapBuffers()
 inline void Window::PollEvents()
 {
     glfwPollEvents();
+}
+
+inline void Window::WaitEvents()
+{
+    glfwWaitEvents();
 }
 
 }

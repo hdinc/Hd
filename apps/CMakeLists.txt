@@ -1,1 +1,2 @@
 add_subdirectory(window_test)
+add_subdirectory(mandelbrot)

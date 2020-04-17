@@ -7,6 +7,7 @@ find_package(glfw3 CONFIG REQUIRED)
 set(SRC
     src/glad/glad.c
     src/Hd/Window.cpp
+    src/Hd/Shader.cpp
 )
 
 add_library(Hd ${SRC})
