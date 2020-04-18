@@ -15,9 +15,8 @@ public:
     ~Shader();
     void Use();
 
-    private:
+private:
     void CheckError(GLuint id, GLenum pname);
-
 };
 
 inline void Shader::Use()
