@@ -4,7 +4,7 @@ out vec4 color;
 
 uniform vec2 viewport = vec2(1920,1080);
 
-const float iteration = 2000;
+const float iteration = 20;
 const float zoom = .2;
 const vec2 zoomloc = vec2(0,0);
 

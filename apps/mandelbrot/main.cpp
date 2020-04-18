@@ -1,8 +1,16 @@
 #include <Hd.h>
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
+void Gui();
+void initializeImGui(GLFWwindow* window);
+void destroyImGui();
 
 int main()
 {
     Hd::Window window("mandelbrot", 1280, 720);
+    initializeImGui(window.WindowId());
 
     float square[] = { -1.f, -1.f, -1.f, 1.f, 1.f, -1.f, 1.f, 1.f };
 
@@ -18,8 +26,6 @@ int main()
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
-    glClearColor(0, 0, 0, 0);
-
     Hd::Shader shader("vertex.glsl", "mandelbrot.glsl");
     shader.Use();
 
@@ -29,7 +35,52 @@ int main()
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
+        //gui
+        {
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            ImGui::ShowDemoWindow();
+            Gui();
+
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        }
+
         window.SwapBuffers();
-        window.WaitEvents();
+        window.PollEvents();
     }
+
+    destroyImGui();
+}
+
+void Gui()
+{
+
+    ImGui::Begin("Hello, world!");
+
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+    ImGui::End();
+}
+
+void initializeImGui(GLFWwindow* window)
+{
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 130");
+}
+
+void destroyImGui()
+{
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 }
