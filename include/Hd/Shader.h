@@ -13,13 +13,13 @@ public:
     Shader(const char* vertex, const char* geometry, const char* fragment);
     Shader(const char* compute);
     ~Shader();
-    void Use();
+    void Bind();
 
 private:
     void CheckError(GLuint id, GLenum pname);
 };
 
-inline void Shader::Use()
+inline void Shader::Bind()
 {
     glUseProgram(m_ProgramId);
 }
