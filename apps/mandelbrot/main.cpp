@@ -27,7 +27,7 @@ int main()
     glEnableVertexAttribArray(0);
 
     Hd::Shader shader("vertex.glsl", "mandelbrot.glsl");
-    shader.Use();
+    shader.Bind();
 
     while (!window.ShouldClose()) {
 
