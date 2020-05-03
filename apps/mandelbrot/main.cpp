@@ -10,7 +10,7 @@ void destroyImGui();
 int main()
 {
     Hd::Window window("mandelbrot", 1280, 720);
-    initializeImGui(window.WindowId());
+    initializeImGui(window.Id());
 
     float square[] = { -1.f, -1.f, -1.f, 1.f, 1.f, -1.f, 1.f, 1.f };
 

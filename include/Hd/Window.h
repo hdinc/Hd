@@ -9,7 +9,7 @@ class Window {
 public:
     Window(const char* name, int width, int height);
     ~Window();
-    GLFWwindow* WindowId() { return m_WindowId; }
+    GLFWwindow* Id() { return m_WindowId; }
     void FullScreen(bool f);
     void VSync(bool v);
     void SwapBuffers();
