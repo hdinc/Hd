@@ -26,7 +26,7 @@ int main()
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
-    Hd::Shader shader("vertex.glsl", "mandelbrot.glsl");
+    Hd::Shader shader("../res/shaders/vertex.glsl", "../res/shaders/mandelbrot.glsl");
     shader.Bind();
 
     while (!window.ShouldClose()) {
