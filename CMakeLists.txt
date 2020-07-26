@@ -11,6 +11,7 @@ set(SRC
     src/Hd/Window.cpp
     src/Hd/Shader.cpp
     src/Hd/Texture.cpp
+    src/Hd/Gui.cpp
 )
 
 add_library(Hd ${SRC})
