@@ -2,10 +2,16 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 void Gui();
 void initializeImGui(GLFWwindow* window);
 void destroyImGui();
+
+static glm::mat4 mvp(1.0f);
+static glm::vec2 loc(0.f);
+static float zoom = 1;
 
 int main()
 {
@@ -26,8 +32,11 @@ int main()
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
-    Hd::Shader shader("../res/shaders/vertex.glsl", "../res/shaders/mandelbrot.glsl");
+    Hd::Shader shader(
+        "../res/shaders/vertex.glsl", "../res/shaders/mandelbrot.glsl");
     shader.Bind();
+
+    GLint u_mvp = glGetUniformLocation(shader.Id(), "MVP");
 
     while (!window.ShouldClose()) {
 
@@ -35,7 +44,12 @@ int main()
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-        //gui
+        mvp = glm::translate(glm::mat4(1), glm::vec3(loc, 0.0f));
+        mvp = glm::scale(mvp, glm::vec3(zoom));
+
+        glUniformMatrix4fv(u_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
+
+        // gui
         {
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
@@ -60,7 +74,11 @@ void Gui()
 
     ImGui::Begin("Hello, world!");
 
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+        1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+    ImGui::DragFloat("zoom", &zoom);
+    ImGui::SliderFloat2("loc", glm::value_ptr(loc), -1, 1);
 
     ImGui::End();
 }
