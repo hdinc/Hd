@@ -1,0 +1,2 @@
+more verbose output when shader file couldnt opened.
+also shader type is wrong
