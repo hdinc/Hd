@@ -75,9 +75,9 @@ public:
     glm::mat4 mvp;
     line(glm::mat4* v, glm::mat4* p)
         : shader("../res/shaders/line.glsl", "../res/shaders/frag.glsl")
+        , color(0.5f, 0.7f, 0.1f)
         , view(v)
         , projection(p)
-        , color(0.5f, 0.7f, 0.1f)
 
     {
         MVP = glGetUniformLocation(shader.Id(), "MVP");
@@ -133,38 +133,53 @@ GLFWwindow* w = 0;
 bool drag = false;
 glm::vec2 drag_start(0);
 
-const int path_size = 50000;
-const float delta_t = 500;
-const float G = 6.67408e-17;
-const float Me = 5.972e24;
-const float Mm = 7.348e22;
-const float moon_w = 2.42407e-6;
+const int path_size = 5000000;
+const double delta_t = 10;
+const double G = 6.67408e-17;
+const double Me = 5.972e24;
+const double Mm = 7.348e22;
+const double moon_w = 2.42407e-6;
 
-glm::vec2 path[2][path_size];
-glm::vec2 init_loc(-6500, 0);
-glm::vec2 init_vel(0, 260);
-glm::vec2 moon_last(384400, 0);
+glm::tvec2<double, glm::highp> path[2][path_size];
+glm::vec2 path_draw[path_size];
+glm::tvec2<double, glm::highp> init_loc(-6500, 0);
+glm::tvec2<double, glm::highp> init_vel(0, 260);
+glm::tvec2<double, glm::highp> moon_last(384400, 0);
 float path_draw_time;
+float last_calculate_time;
+
+GLuint vao, vbo;
+GLint COLOR, MVP;
 
 void calculate_path()
 {
+    last_calculate_time = glfwGetTime();
     path[0][0] = init_loc;
     path[1][0] = init_vel;
+    path_draw[0] = init_loc;
 
     for (int i = 1; i < path_size; i++) {
-        glm::vec2 a(0);
+        glm::tvec2<double, glm::highp> a(0);
         float l1 = glm::length(path[0][i - 1]);
         float l2 = glm::length(moon_last - path[0][i - 1]);
         a += G * Me / (l1 * l1) * glm::normalize(-path[0][i - 1]);
         a += G * Mm / (l2 * l2) * glm::normalize(moon_last - path[0][i - 1]);
         auto moon_angle = moon_w * delta_t;
-        auto r = glm::mat2(cos(moon_angle), -sin(moon_angle), sin(moon_angle),
-            cos(moon_angle));
+        glm::tmat2x2<double, glm::highp> r(cos(moon_angle), -sin(moon_angle),
+            sin(moon_angle), cos(moon_angle));
         moon_last = r * moon_last;
 
-        path[1][i] = path[1][i - 1] + a * delta_t / 1000.f;
-        path[0][i] = path[0][i - 1] + path[1][i - 1] * delta_t / 1000.f;
+        path[1][i] = path[1][i - 1] + a * delta_t / 1000.0;
+        path[0][i] = path[0][i - 1] + path[1][i - 1] * delta_t / 1000.0;
+        path_draw[i] = path[0][i];
     }
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferSubData(
+        GL_ARRAY_BUFFER, 0, path_size * 2 * sizeof(float), &path_draw[0]);
+
+    last_calculate_time = glfwGetTime() - last_calculate_time;
 }
 
 int main()
@@ -177,12 +192,26 @@ int main()
     w = window.Id();
     Hd::Gui gui(window);
 
+    Hd::Shader circle_shader(
+        "../res/shaders/vertex.glsl", "../res/shaders/frag.glsl");
+
+    {
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
+        glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, path_size * 2 * sizeof(float),
+            &path_draw[0], GL_DYNAMIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+        COLOR = glGetUniformLocation(circle_shader.Id(), "COLOR");
+        MVP = glGetUniformLocation(circle_shader.Id(), "MVP");
+    }
+
     glfwSetFramebufferSizeCallback(w, framebuffer_size_callback);
     glfwSetScrollCallback(w, scroll_callback);
     glfwSetMouseButtonCallback(w, mouse_button_callback);
-
-    Hd::Shader circle_shader(
-        "../res/shaders/vertex.glsl", "../res/shaders/frag.glsl");
 
     circle::init_gldata(&circle_shader, &view, &projection);
 
@@ -194,20 +223,32 @@ int main()
     calculate_path();
 
     while (!window.ShouldClose()) {
-        window.PollEvents();
+        window.WaitEvents();
         glClear(GL_COLOR_BUFFER_BIT);
 
         earth.draw();
         moon.draw();
-        gui.Draw();
 
-        path_draw_time = glfwGetTime();
-        /* for (int i = 1; i < path_size; i++) { */
-        /*     l.draw(path[0][i], path[0][i - 1]); */
-        /* } */
+        {
+            glFinish();
+            path_draw_time = glfwGetTime();
 
-        l.draw(&path[0][0], path_size);
-        path_draw_time = glfwGetTime() - path_draw_time;
+            /* for (int i = 1; i < path_size; i++) { */
+            /*     l.draw(path[0][i], path[0][i - 1]); */
+            /* } */
+
+            // l.draw(&path_draw[0], path_size);
+
+            glBindVertexArray(vao);
+            glm::mat4 mvp(1);
+            mvp = projection * view;
+            circle_shader.Bind();
+            glUniformMatrix4fv(MVP, 1, 0, glm::value_ptr(mvp));
+            glUniform3f(COLOR, .3, 5, .1);
+            glDrawArrays(GL_LINE_STRIP, 0, path_size);
+            glFinish();
+            path_draw_time = glfwGetTime() - path_draw_time;
+        }
 
         if (drag) {
             auto a = get_viewportcoord() - drag_start;
@@ -216,7 +257,7 @@ int main()
             view = glm::scale(glm::mat4(1), glm::vec3(camera_zoom));
             view = glm::translate(view, glm::vec3(a - camera_loc, 0.0));
         }
-
+        gui.Draw();
         window.SwapBuffers();
     }
 
@@ -236,12 +277,16 @@ void Hd::Gui::GuiFunc()
     a /= camera_zoom;
     ImGui::Text("distance: %f, %f", (camera_loc + a).x, (camera_loc + a).y);
 
-    ImGui::DragFloat2("init_vel", glm::value_ptr(init_vel));
-    ImGui::Text("path_draw_time = %f", path_draw_time);
+    ImGui::Text("path_draw_time = %f\nlast_calculate_time = %f\n",
+        path_draw_time, last_calculate_time);
 
     if (ImGui::Button("calculate_path")) {
         calculate_path();
     }
+
+    glm::vec2 t = init_vel;
+    ImGui::DragFloat2("init_vel", glm::value_ptr(t), 0.01f);
+    init_vel = t;
 
     for (int i = 0; i < 5; i++) {
         ImGui::Text("path[%d] = (%.2f,%.2f)", i, path[0][i].x, path[0][i].y);
