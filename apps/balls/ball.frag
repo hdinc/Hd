@@ -1,8 +1,8 @@
-#version 330 core
+#version 430 core
 
-layout(location = 0) in vec2 Pos;
-uniform mat4 MVP;
+uniform vec4 color;
+out vec4 c;
 
 void main() {
-    gl_Position = MVP * vec4(Pos,.5,1);
+    c = color;
 }
