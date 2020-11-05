@@ -19,4 +19,7 @@ target_link_libraries(Hd glfw glad imgui stb)
 
 target_include_directories(Hd PUBLIC include)
 
-add_subdirectory(apps)
+option(build_apps "build_apps" OFF)
+if(build_apps)
+    add_subdirectory(apps)
+endif(build_apps)
