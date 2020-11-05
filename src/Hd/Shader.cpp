@@ -94,10 +94,7 @@ Shader::Shader(const char* compute)
     glDeleteShader(cs);
 }
 
-Shader::~Shader()
-{
-    glDeleteProgram(m_ProgramId);
-}
+Shader::~Shader() { glDeleteProgram(m_ProgramId); }
 
 void Shader::CheckError(GLuint id, GLenum pname)
 {
@@ -111,7 +108,8 @@ void Shader::CheckError(GLuint id, GLenum pname)
             glGetShaderInfoLog(id, length, &length, message);
             int type;
             glGetShaderiv(id, GL_SHADER_TYPE, &type);
-            printf("Failed to complie %s shader ; \n", (type == GL_VERTEX_SHADER ? "vertex" : "fragment"));
+            printf("Failed to complie %s shader ; \n",
+                (type == GL_VERTEX_SHADER ? "vertex" : "fragment"));
             printf("%s\n", message);
             glDeleteShader(id);
             exit(-1);
@@ -123,7 +121,8 @@ void Shader::CheckError(GLuint id, GLenum pname)
             glGetProgramiv(id, GL_INFO_LOG_LENGTH, &length);
             char* message = (char*)alloca(length);
             glGetProgramInfoLog(id, length, &length, message);
-            printf("Failed to %s program;\n%s\n", pname == GL_LINK_STATUS ? "link" : "validate", message);
+            printf("Failed to %s program;\n%s\n",
+                pname == GL_LINK_STATUS ? "link" : "validate", message);
             glDeleteProgram(id);
             exit(-1);
         }
@@ -138,7 +137,7 @@ static const char* GetFile(const char* filename)
     long length;
     FILE* f = fopen(filename, "rb");
     if (!f) {
-        fprintf(stderr, "cannot open %s", filename);
+        fprintf(stderr, "cannot open %s\n", filename);
         exit(1);
     }
     fseek(f, 0, SEEK_END);

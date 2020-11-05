@@ -3,7 +3,8 @@
 #include <Hd/Texture.h>
 
 namespace Hd {
-Texture::Texture(const char* filename) {
+Texture::Texture(const char* filename)
+{
 
     glGenTextures(1, &m_TextureId);
     glBindTexture(GL_TEXTURE_2D, m_TextureId);

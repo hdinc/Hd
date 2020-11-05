@@ -19,9 +19,6 @@ inline void Texture::Bind(unsigned int n)
     glBindTexture(GL_TEXTURE_2D, m_TextureId);
 }
 
-inline Texture::~Texture()
-{
-    glDeleteTextures(1, &m_TextureId);
-}
+inline Texture::~Texture() { glDeleteTextures(1, &m_TextureId); }
 
 }
