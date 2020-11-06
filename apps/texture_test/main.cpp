@@ -2,14 +2,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-
-void Gui();
-void initializeImGui(GLFWwindow* window);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void destroyImGui();
 
 static glm::mat4 mvp(1.0f);
 static glm::vec2 loc(0.f);
@@ -19,13 +12,11 @@ static float izoom = 1;
 int main()
 {
     Hd::Window window("test", 500, 500);
-    Hd::Shader shader(
-        "../res/shaders/vertex.glsl", "../res/shaders/texture.glsl");
+    Hd::Shader shader("../res/shaders/vertex.glsl", "../res/shaders/texture.glsl");
     Hd::Texture texture("../res/textures/diyojen.png");
+    Hd::Gui gui(window);
 
     glfwSetScrollCallback(window.Id(), scroll_callback);
-
-    initializeImGui(window.Id());
 
     float square[] = { -1, -1, 0, 0, -1, 1, 0, 1, 1, -1, 1, 0, 1, 1, 1, 1 };
 
@@ -39,8 +30,8 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(square), square, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
-        (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(
+        1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
@@ -64,26 +55,14 @@ int main()
         glUniformMatrix4fv(u_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-        // gui
-        {
-            ImGui_ImplOpenGL3_NewFrame();
-            ImGui_ImplGlfw_NewFrame();
-            ImGui::NewFrame();
-
-            ImGui::ShowDemoWindow();
-            Gui();
-
-            ImGui::Render();
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        }
+        gui.Draw();
 
         window.SwapBuffers();
         window.PollEvents();
     }
-    destroyImGui();
 }
 
-void Gui()
+void Hd::Gui::GuiFunc()
 {
 
     ImGui::Begin("Hello, world!");
@@ -94,26 +73,6 @@ void Gui()
     ImGui::SliderFloat2("loc", glm::value_ptr(loc), -1, 1);
 
     ImGui::End();
-}
-
-void initializeImGui(GLFWwindow* window)
-{
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    (void)io;
-
-    ImGui::StyleColorsDark();
-
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 130");
-}
-
-void destroyImGui()
-{
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
