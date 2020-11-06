@@ -5,3 +5,4 @@
 #include <Hd/Shader.h>
 #include <Hd/Texture.h>
 #include <Hd/Gui.h>
+#include <Hd/FrameBuffer.h>
