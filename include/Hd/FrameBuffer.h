@@ -1,3 +1,5 @@
+#pragma once
+
 #include <glad/glad.h>
 #include <Hd/Texture.h>
 
@@ -22,5 +24,7 @@ inline void FrameBuffer::Bind()
 }
 
 inline GLuint FrameBuffer::Id() { return m_FrameBufferId; }
+
+inline FrameBuffer::~FrameBuffer() { glDeleteFramebuffers(1, &m_FrameBufferId); }
 
 }
