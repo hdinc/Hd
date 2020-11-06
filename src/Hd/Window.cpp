@@ -7,7 +7,8 @@
 static void framecallback(GLFWwindow* w, int width, int height);
 static void glfw_error_callback(int error, const char* description);
 static void GLAPIENTRY messagecallback(GLenum source, GLenum type, GLuint id,
-    GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
+    GLenum severity, GLsizei length, const GLchar* message,
+    const void* userParam);
 
 namespace Hd {
 
@@ -38,7 +39,8 @@ Window::Window(const char* name, int width, int height)
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(messagecallback, nullptr);
-    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, true);
+    glDebugMessageControl(
+        GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, true);
 #endif
 
     glfwSwapInterval(m_Vsync ? 1 : 0);
@@ -60,15 +62,16 @@ void Window::FullScreen(bool f)
         }
         glfwGetWindowSize(m_WindowId, &wx, &wy);
         glfwGetWindowPos(m_WindowId, &posx, &posy);
-        glfwSetWindowMonitor(
-            m_WindowId, glfwGetPrimaryMonitor(), 0, 0, 1920, 1080, GLFW_DONT_CARE);
+        glfwSetWindowMonitor(m_WindowId, glfwGetPrimaryMonitor(), 0, 0, 1920,
+            1080, GLFW_DONT_CARE);
         glfwSwapInterval(m_Vsync ? 1 : 0);
         fullscreen = true;
         glViewport(0, 0, 1920, 1080);
         return;
     } else {
         if (fullscreen) {
-            glfwSetWindowMonitor(m_WindowId, NULL, posx, posy, wx, wy, GLFW_DONT_CARE);
+            glfwSetWindowMonitor(
+                m_WindowId, NULL, posx, posy, wx, wy, GLFW_DONT_CARE);
             glfwSwapInterval(m_Vsync ? 1 : 0);
             fullscreen = false;
             glViewport(0, 0, wx, wy);
@@ -117,7 +120,8 @@ static void glfw_error_callback(int error, const char* description)
 }
 
 static void GLAPIENTRY messagecallback(GLenum source, GLenum type, GLuint id,
-    GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
+    GLenum severity, GLsizei length, const GLchar* message,
+    const void* userParam)
 {
     // ignore non-significant error/warning codes
     if (id == 131169 || id == 131185 || id == 131218 || id == 131204)

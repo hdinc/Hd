@@ -1,4 +1,4 @@
 BasedOnStyle: WebKit
 IndentWidth: 4
 SortIncludes: false
-ColumnLimit: 90
+ColumnLimit: 80

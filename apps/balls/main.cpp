@@ -52,12 +52,16 @@ glm::vec2 rotate90(glm::vec2 x)
 void borderbounce(ball balls[], unsigned count)
 {
     for (unsigned i = 0; i < count; i++) {
-        if ((balls[i].loc.x > borderw / 2 - ball::radius && balls[i].speed.x > 0)
-            || (balls[i].loc.x < -(borderw / 2 - ball::radius) && balls[i].speed.x < 0)) {
+        if ((balls[i].loc.x > borderw / 2 - ball::radius
+                && balls[i].speed.x > 0)
+            || (balls[i].loc.x < -(borderw / 2 - ball::radius)
+                && balls[i].speed.x < 0)) {
             balls[i].speed.x = -balls[i].speed.x;
         }
-        if ((balls[i].loc.y > borderh / 2 - ball::radius && balls[i].speed.y > 0)
-            || (balls[i].loc.y < -(borderh / 2 - ball::radius) && balls[i].speed.y < 0)) {
+        if ((balls[i].loc.y > borderh / 2 - ball::radius
+                && balls[i].speed.y > 0)
+            || (balls[i].loc.y < -(borderh / 2 - ball::radius)
+                && balls[i].speed.y < 0)) {
             balls[i].speed.y = -balls[i].speed.y;
         }
     }
@@ -143,7 +147,8 @@ int main()
     }
 
     glm::mat4 projection(1);
-    projection = glm::scale(glm::mat4(1), glm::vec3((9.0 / 16) / 7, 1.0 / 7, 1));
+    projection
+        = glm::scale(glm::mat4(1), glm::vec3((9.0 / 16) / 7, 1.0 / 7, 1));
 
     ball::shader = &shader;
     ball::projection = &projection;
@@ -156,7 +161,8 @@ int main()
     // initballs
     {
         for (unsigned i = 0; i < ballcount; i++) {
-            balls[i].loc = glm::vec2(-9.85f + (i % 35) * .52f, -5.75f + (i / 35) * 0.5f);
+            balls[i].loc
+                = glm::vec2(-9.85f + (i % 35) * .52f, -5.75f + (i / 35) * 0.5f);
             balls[i].speed = glm::vec2(
                 glm::linearRand(-.001f, .001f), glm::linearRand(-.001f, .001f));
         }
@@ -199,8 +205,8 @@ int main()
             }
             total_energy = 0;
             for (unsigned i = 0; i < ballcount; i++) {
-                total_energy
-                    += (glm::length(balls[i].speed)) * (glm::length(balls[i].speed));
+                total_energy += (glm::length(balls[i].speed))
+                    * (glm::length(balls[i].speed));
             }
 
             ball::radius = radius;
