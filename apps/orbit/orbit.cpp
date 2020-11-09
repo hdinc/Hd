@@ -1,3 +1,7 @@
+// TODO: try runga kutta method: also is this euler method
+// take a look at numerical methods
+// option for other methods and comparison
+
 #include <Hd.h>
 #include <math.h>
 #include <glm/glm.hpp>
@@ -307,6 +311,9 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
+    if (drag)
+        return;
+
     if (yoffset > 0)
         camera_zoom *= .75;
     else
