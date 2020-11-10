@@ -124,7 +124,7 @@ int main()
 {
     Hd::Window window("balls", 1280, 720);
     window.VSync(false);
-    Hd::Shader shader("ball.vert", "ball.frag");
+    Hd::Shader shader("../res/shaders/ball.vert", "../res/shaders/ball.frag");
     initializeImGui(window);
 
     GLint mvp = glGetUniformLocation(shader.Id(), "MVP");
