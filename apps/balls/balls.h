@@ -1,32 +1,38 @@
-#ifndef BALL_H
-#define BALL_H
+#pragma once
 
+#include <vector>
 #include <Hd/Shader.h>
 #include <glm/glm.hpp>
 
-class ball {
+class balls {
+private:
+    static const int mCircleVertexCount;
+    int mCount;
+    float mRadius;
+    glm::vec2 mBorder;
+
+private:
+    GLuint mVao, mVbo, mLbo;
+    glm::mat4& mProjection;
+    Hd::Shader mShader;
+
+    glm::vec2* mSpeed;
+    glm::vec2* mLoc;
+
+    bool mChanged = true;
+
+    void initGL();
+    void destroyGL();
+    void initBalls();
+    void borderBounce();
+    void ballBounce();
+
 public:
-    static glm::mat4* projection;
-    static Hd::Shader* shader;
-    static GLuint vao, vbo;
-    static GLint mvp;
-    static GLint color;
-    static bool drawSpeed;
-    static float radius;
-    static glm::vec4 c;
+    balls(glm::mat4& projection, int count, float radius, glm::vec2 border);
+    ~balls();
 
-    static void initgldata();
-    static void destroygldata();
-
-    glm::vec2 speed;
-    glm::vec2 loc;
-    glm::mat4 model;
-    glm::mat4 MVP;
-
-    ball();
-    ball(glm::vec2 loc, glm::vec2 speed);
-
+    void setRadius(float r);
+    void step(float dt);
     void draw();
+    float calculateTotalEnergy();
 };
-
-#endif // BALL_H
