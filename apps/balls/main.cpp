@@ -115,10 +115,16 @@ void Hd::Gui::GuiFunc()
         pause = !pause;
     }
 
-    static double tmb = glfwGetTime();
-    double t = glfwGetTime() - tmb;
-    ImGui::Text("fps = %f", 1.0 / t);
-    tmb = glfwGetTime();
+    static int frame = 0;
+    static int fps = 0;
+    static double ltime = glfwGetTime();
+    if (glfwGetTime() - ltime > 1.0) {
+        ltime = glfwGetTime();
+        fps = frame;
+        frame = 0;
+    }
+    frame++;
+    ImGui::Text("fps = %d", fps);
 
     ImGui::End();
 }
