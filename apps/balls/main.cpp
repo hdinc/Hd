@@ -2,6 +2,8 @@
 // heat http://phet.colorado.edu/sims/collision-lab/collision-lab_en.html
 
 // border scale bug?
+// make count changeable
+// ballbounce 1 frame lag
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -21,8 +23,7 @@
 #include <cstdio>
 #include <math.h>
 
-int ballcount = 40;
-float radius = 0.1f;
+float radius = 0.4f;
 float timescale = 1.0f;
 float mtime = 0.0f;
 float timebefore;
@@ -65,7 +66,7 @@ int main()
 
     timebefore = glfwGetTime();
 
-    balls lballs(projection, ballcount, radius, border);
+    balls lballs(projection, radius, border);
     gballs = &lballs;
 
     while (!window.ShouldClose()) {
@@ -107,12 +108,16 @@ void Hd::Gui::GuiFunc()
         gballs->setRadius(radius);
     }
 
-    ImGui::Text("Time = %.3f", mtime);
+    ImGui::Text("Time = %.3f (%s)", mtime, pause ? "Paused" : "Playing");
     ImGui::Text("Deltatime = %.3f", deltatime);
-    ImGui::Text("%s", pause ? "Paused" : "Playing");
-    ImGui::SameLine();
     if (ImGui::Button("Pause")) {
         pause = !pause;
+    }
+
+    if (ImGui::Button("Step") && pause) {
+        deltatime = (timescale * (0.01));
+        gballs->step(deltatime);
+        mtime += deltatime;
     }
 
     static int frame = 0;

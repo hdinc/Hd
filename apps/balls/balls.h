@@ -7,7 +7,7 @@
 class balls {
 private:
     static const int mCircleVertexCount;
-    int mCount;
+    int mCount = 10;
     float mRadius;
     glm::vec2 mBorder;
 
@@ -15,20 +15,17 @@ private:
     GLuint mVao, mVbo, mLbo;
     glm::mat4& mProjection;
     Hd::Shader mShader;
+    Hd::Shader mComputeShader;
 
     glm::vec2* mSpeed;
     glm::vec2* mLoc;
 
-    bool mChanged = true;
-
     void initGL();
     void destroyGL();
     void initBalls();
-    void borderBounce();
-    void ballBounce();
 
 public:
-    balls(glm::mat4& projection, int count, float radius, glm::vec2 border);
+    balls(glm::mat4& projection, float radius, glm::vec2 border);
     ~balls();
 
     void setRadius(float r);
