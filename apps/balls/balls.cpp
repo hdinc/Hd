@@ -1,57 +1,44 @@
 #include "balls.h"
+#include <cstring>
 #include <glm/common.hpp>
 #include <glm/gtc/random.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <memory>
+
+typedef struct {
+    glm::vec2 loc[2][10];
+    glm::vec2 speed[2][10];
+} lb;
+
+static lb* lbp;
+static int cindex = 1;
 
 const int balls::mCircleVertexCount = 20;
 
-static glm::vec2 rotate90(glm::vec2 x)
-{
-    glm::vec2 r;
-
-    r.x = -x.y;
-    r.y = x.x;
-
-    return r;
-}
-
-balls::balls(glm::mat4& projection, int count, float radius, glm::vec2 border)
+balls::balls(glm::mat4& projection, float radius, glm::vec2 border)
     : mProjection(projection)
     , mShader("../res/shaders/balls.vert", "../res/shaders/balls.frag")
+    , mComputeShader("../res/shaders/balls_compute.glsl")
     , mBorder(border)
 {
-    mCount = count;
     mRadius = radius;
-    mLoc = new glm::vec2[mCount];
-    mSpeed = new glm::vec2[mCount];
 
-    initGL();
+    lbp = new lb();
+
+    mLoc = lbp->loc[0];
+    mSpeed = lbp->speed[0];
+
     initBalls();
+    initGL();
 }
 
-balls::~balls()
-{
-    delete[] mLoc;
-    delete[] mSpeed;
-}
+balls::~balls() { delete lbp; }
 
 void balls::draw()
 {
-    // todo: instanced rendering
-    // create locations buffer
-    // upload it to the gpu
-    // call instanced rendering
-
     mShader.Bind();
+    glUniform1i(3, cindex);
     glBindVertexArray(mVao);
-    glBindBuffer(GL_ARRAY_BUFFER, mVbo);
-
-    if (mChanged) {
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, mLbo);
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, mCount * sizeof(glm::vec2),
-            glm::value_ptr(mLoc[0]));
-        mChanged = false;
-    }
     glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, mCircleVertexCount, mCount);
 }
 
@@ -59,6 +46,7 @@ void balls::initGL()
 {
     setRadius(mRadius);
 
+    mShader.Bind();
     glUniformMatrix4fv(1, 1, GL_FALSE, glm::value_ptr(mProjection));
 
     glGenVertexArrays(1, &mVao);
@@ -84,10 +72,14 @@ void balls::initGL()
 
     glGenBuffers(1, &mLbo);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, mLbo);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, mCount * sizeof(glm::vec2), 0,
-        GL_DYNAMIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(lb), lbp, GL_DYNAMIC_DRAW);
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, mLbo);
+
+    mComputeShader.Bind();
+    glUniform1i(1, 1);
+    glUniform2f(2, mBorder.x, mBorder.y);
+    glUniform1f(3, mRadius);
 }
 
 void balls::destroyGL()
@@ -110,72 +102,22 @@ void balls::initBalls()
             glm::linearRand(-.001f, .001f), glm::linearRand(-.001f, .001f));
     }
     mSpeed[mCount - 1] = glm::vec2(10, 5);
+    memcpy(&lbp->speed[1], &lbp->speed[0], sizeof(lbp->speed[0]));
+    memcpy(&lbp->loc[1], &lbp->loc[0], sizeof(lbp->loc[0]));
 }
 
 void balls::step(float dt)
 {
-    for (unsigned i = 0; i < mCount; i++) {
-        mLoc[i] += mSpeed[i] * dt;
-    }
-
-    borderBounce();
-    ballBounce();
-    mChanged = true;
-}
-
-void balls::borderBounce()
-{
-    for (unsigned i = 0; i < mCount; i++) {
-        if ((mLoc[i].x > mBorder.x / 2 - balls::mRadius && mSpeed[i].x > 0)
-            || (mLoc[i].x < -(mBorder.x / 2 - balls::mRadius)
-                && mSpeed[i].x < 0)) {
-            mSpeed[i].x = -mSpeed[i].x;
-        }
-        if ((mLoc[i].y > mBorder.y / 2 - balls::mRadius && mSpeed[i].y > 0)
-            || (mLoc[i].y < -(mBorder.y / 2 - balls::mRadius)
-                && mSpeed[i].y < 0)) {
-            mSpeed[i].y = -mSpeed[i].y;
-        }
-    }
-}
-
-void balls::ballBounce()
-{
-    glm::vec2 ballAx, ballAy, ballBx, ballBy, AB, nAB;
-    for (unsigned i = 0; i < mCount - 1; i++) {
-        for (unsigned j = i + 1; j < mCount; j++) {
-            if (glm::length(mLoc[i] - mLoc[j]) < 2 * balls::mRadius) {
-
-                AB = glm::normalize(mLoc[j] - mLoc[i]);
-                ballAx = AB * glm::dot(mSpeed[i], AB);
-                ballBx = AB * glm::dot(mSpeed[j], AB);
-                nAB = rotate90(AB);
-                ballAy = nAB * glm::dot(mSpeed[i], nAB);
-                ballBy = nAB * glm::dot(mSpeed[j], nAB);
-
-                if (glm::dot(ballAx, ballBx) > 0) {
-                    if (glm::dot(AB, ballAx) > 0) {
-                        if (glm::length(ballAx) > glm::length(ballBx)) {
-                            mSpeed[i] = ballBx + ballAy;
-                            mSpeed[j] = ballAx + ballBy;
-                        }
-                    } else {
-                        if (glm::length(ballBx) > glm::length(ballAx)) {
-                            mSpeed[i] = ballBx + ballAy;
-                            mSpeed[j] = ballAx + ballBy;
-                        }
-                    }
-                } else if (glm::dot(ballAx, AB) > 0) {
-                    mSpeed[i] = ballBx + ballAy;
-                    mSpeed[j] = ballAx + ballBy;
-                }
-            }
-        }
-    }
+    cindex = 1 - cindex;
+    mComputeShader.Bind();
+    glUniform1i(1, cindex);
+    glUniform1f(4, dt);
+    glDispatchCompute(1, 1, 1);
 }
 
 float balls::calculateTotalEnergy()
 {
+    // to be implemented
     float total_energy = 0;
     for (unsigned i = 0; i < mCount; i++) {
         total_energy += (glm::length(mSpeed[i])) * (glm::length(mSpeed[i]));
@@ -188,4 +130,6 @@ void balls::setRadius(float r)
     mRadius = r;
     mShader.Bind();
     glUniform1f(2, mRadius);
+    mComputeShader.Bind();
+    glUniform1f(3, mRadius);
 }
