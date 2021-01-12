@@ -107,6 +107,20 @@ void Window::fpsLimit(int a)
         printf("[WINDOW]:cant limit fps under 10\n");
 }
 
+int Window::getFps()
+{
+    static int fps = 0;
+    static double ltime = glfwGetTime();
+
+    if (glfwGetTime() - ltime > 1.0) {
+        ltime = glfwGetTime();
+        fps = m_frame;
+        m_frame = 0;
+    }
+
+    return fps;
+}
+
 }
 
 static void framecallback(GLFWwindow* w, int width, int height)
