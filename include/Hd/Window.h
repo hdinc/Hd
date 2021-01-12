@@ -31,14 +31,14 @@ inline void Window::SwapBuffers() { glfwSwapBuffers(m_WindowId); }
 
 inline void Window::PollEvents()
 {
-    glfwPollEvents();
     waitFpsLimit();
+    glfwPollEvents();
 }
 
 inline void Window::WaitEvents()
 {
-    glfwWaitEvents();
     waitFpsLimit();
+    glfwWaitEvents();
 }
 
 }
