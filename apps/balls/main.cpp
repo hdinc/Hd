@@ -32,11 +32,13 @@ bool pause = true;
 float total_energy;
 balls* gballs;
 glm::vec2 border(10, 10);
+Hd::Window* gwindow;
 
 int main()
 {
     Hd::Window window("balls", 1280, 720);
     window.fpsLimit(60);
+    gwindow = &window;
     Hd::Gui gui(window);
     Hd::Shader borderShader(
         "../res/shaders/vertex.glsl", "../res/shaders/frag.glsl");
@@ -120,16 +122,7 @@ void Hd::Gui::GuiFunc()
         mtime += deltatime;
     }
 
-    static int frame = 0;
-    static int fps = 0;
-    static double ltime = glfwGetTime();
-    if (glfwGetTime() - ltime > 1.0) {
-        ltime = glfwGetTime();
-        fps = frame;
-        frame = 0;
-    }
-    frame++;
-    ImGui::Text("fps = %d", fps);
+    ImGui::Text("fps = %d", gwindow->getFps());
 
     ImGui::End();
 }
