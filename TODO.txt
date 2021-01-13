@@ -1,3 +1,4 @@
 more verbose output when shader file couldnt opened.
 also shader type is wrong
 input lag?
+Where should the swapbuffers and pollevents be? Main loop order? 
