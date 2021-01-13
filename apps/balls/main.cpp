@@ -91,11 +91,12 @@ int main()
             glDrawArrays(GL_LINE_LOOP, 0, 4);
         }
 
+        window.PollEvents();
+
         lballs.draw();
         gui.Draw();
 
         window.SwapBuffers();
-        window.PollEvents();
     }
 }
 
