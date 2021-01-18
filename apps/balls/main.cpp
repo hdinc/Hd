@@ -24,6 +24,8 @@
 #include <math.h>
 
 void scroll_callback(double dx, double dy);
+void framebuffer_size_callback(int x, int y);
+void guifunc();
 
 float radius = 0.4f;
 float timescale = 1.0f;
@@ -37,13 +39,12 @@ glm::vec2 border(10, 10);
 Hd::Window* gwindow;
 Hd::Camera2D* gcam;
 
-void guifunc();
-
 int main()
 {
     Hd::Window window("balls", 1280, 720);
     window.fpsLimit(60);
     window.ScrollCb.addFunc(scroll_callback);
+    window.FrameBufferSizeCb.addFunc(framebuffer_size_callback);
     gwindow = &window;
     Hd::Camera2D cam;
     gcam = &cam;
@@ -139,4 +140,9 @@ void scroll_callback(double dx, double dy)
     if (ImGui::IsAnyWindowHovered())
         return;
     Hd::Camera2D::onScroll(gcam, dx, dy);
+}
+
+void framebuffer_size_callback(int x, int y)
+{
+    gcam->onFramebufferSizeChange(gcam, x, y);
 }
