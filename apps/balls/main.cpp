@@ -89,6 +89,8 @@ int main()
         }
         timebefore = glfwGetTime();
 
+        window.PollEvents();
+
         // draw border
         {
             borderShader.Bind();
@@ -97,8 +99,6 @@ int main()
             glUniform3f(color, 0, 1, 1);
             glDrawArrays(GL_LINE_LOOP, 0, 4);
         }
-
-        window.PollEvents();
 
         lballs.draw();
         gui.Draw();
