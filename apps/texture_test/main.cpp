@@ -25,7 +25,6 @@ int main()
 
     GLuint vao;
     GLuint vbo;
-    GLuint ibo;
 
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);

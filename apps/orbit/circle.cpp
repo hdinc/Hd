@@ -25,7 +25,7 @@ void circle::init_gldata(Hd::Shader* s, glm::mat4* v, glm::mat4* p)
     shader->Bind();
     glUniform3f(COLOR, 1, 1, 1);
 
-    float vertices[vcount][2];
+    auto vertices = new float[vcount][2];
     for (int i = 0; i < vcount; i++) {
         vertices[i][0] = cos(i * M_PI / ((float)vcount / 2.0f));
         vertices[i][1] = sin(i * M_PI / ((float)vcount / 2.0f));
@@ -41,6 +41,7 @@ void circle::init_gldata(Hd::Shader* s, glm::mat4* v, glm::mat4* p)
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
     }
+    delete[] vertices;
 }
 
 void circle::destroy_gldata()
