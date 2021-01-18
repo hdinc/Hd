@@ -8,6 +8,10 @@ add_subdirectory(deps/glad)
 add_subdirectory(deps/imgui)
 add_subdirectory(deps/stb)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
 set(SRC
     src/Hd/Window.cpp
     src/Hd/Shader.cpp
