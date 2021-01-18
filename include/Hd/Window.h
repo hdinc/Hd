@@ -1,6 +1,7 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
+#include <Hd/WindowCallbacks.h>
 
 namespace Hd {
 
@@ -18,6 +19,12 @@ public:
     void WaitEvents();
     bool ShouldClose();
     int getFps();
+
+    Callback<void (*)(double, double)>& CursorPosCb;
+    Callback<void (*)(double, double)>& ScrollCb;
+    Callback<void (*)(int, int, int, int)>& KeyCb;
+    Callback<void (*)(int, int, int)>& MouseButtonCb;
+    Callback<void (*)(int, int)>& FrameBufferSizeCb;
 
 private:
     GLFWwindow* m_WindowId;
