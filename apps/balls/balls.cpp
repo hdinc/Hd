@@ -15,9 +15,9 @@ static int cindex = 1;
 
 const int balls::mCircleVertexCount = 20;
 
-balls::balls(glm::mat4& projection, float radius, glm::vec2 border)
+balls::balls(glm::mat4& VP, float radius, glm::vec2 border)
     : mBorder(border)
-    , mProjection(projection)
+    , mVP(VP)
     , mShader("../res/shaders/balls.vert", "../res/shaders/balls.frag")
     , mComputeShader("../res/shaders/balls_compute.glsl")
 {
@@ -38,6 +38,7 @@ void balls::draw()
 {
     mShader.Bind();
     glUniform1i(3, cindex);
+    glUniformMatrix4fv(1, 1, 0, glm::value_ptr(mVP));
     glBindVertexArray(mVao);
     glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, mCircleVertexCount, mCount);
 }
@@ -47,7 +48,7 @@ void balls::initGL()
     setRadius(mRadius);
 
     mShader.Bind();
-    glUniformMatrix4fv(1, 1, GL_FALSE, glm::value_ptr(mProjection));
+    glUniformMatrix4fv(1, 1, GL_FALSE, glm::value_ptr(mVP));
 
     glGenVertexArrays(1, &mVao);
     glBindVertexArray(mVao);

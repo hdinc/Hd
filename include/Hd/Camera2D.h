@@ -15,6 +15,7 @@ public:
     void move(glm::vec2 d);
     void zoom(float zoom);
     static void onScroll(Camera2D* c, double dx, double dy);
+    static void onFramebufferSizeChange(Camera2D* c, int x, int y);
 
     glm::mat4* getView();
     glm::mat4* getProjection();

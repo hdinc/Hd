@@ -13,7 +13,7 @@ private:
 
 private:
     GLuint mVao, mVbo, mLbo;
-    glm::mat4& mProjection;
+    glm::mat4& mVP;
     Hd::Shader mShader;
     Hd::Shader mComputeShader;
 
@@ -25,7 +25,7 @@ private:
     void initBalls();
 
 public:
-    balls(glm::mat4& projection, float radius, glm::vec2 border);
+    balls(glm::mat4& VP, float radius, glm::vec2 border);
     ~balls();
 
     void setRadius(float r);
