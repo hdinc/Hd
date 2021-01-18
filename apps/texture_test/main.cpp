@@ -3,6 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void guifunc();
 
 static glm::mat4 mvp(1.0f);
 static glm::vec2 loc(0.f);
@@ -16,6 +17,7 @@ int main()
         "../res/shaders/vertex.glsl", "../res/shaders/texture.glsl");
     Hd::Texture texture("../res/textures/diyojen.png");
     Hd::Gui gui(window);
+    gui.addFunc(guifunc);
 
     glfwSetScrollCallback(window.Id(), scroll_callback);
 
@@ -63,7 +65,7 @@ int main()
     }
 }
 
-void Hd::Gui::GuiFunc()
+void guifunc()
 {
 
     ImGui::Begin("Hello, world!");
