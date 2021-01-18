@@ -33,6 +33,8 @@ float total_energy;
 balls* gballs;
 glm::vec2 border(10, 10);
 Hd::Window* gwindow;
+Hd::Camera2D* gcam;
+
 void guifunc();
 
 int main()
@@ -40,6 +42,9 @@ int main()
     Hd::Window window("balls", 1280, 720);
     window.fpsLimit(60);
     gwindow = &window;
+    Hd::Camera2D cam;
+    gcam = &cam;
+    cam.zoom(0.1);
     Hd::Gui gui(window);
     gui.addFunc(guifunc);
     Hd::Shader borderShader(
@@ -64,13 +69,9 @@ int main()
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
     }
 
-    glm::mat4 projection(1);
-    projection
-        = glm::scale(glm::mat4(1), glm::vec3((9.0 / 16) / 4, 1.0 / 4, 1));
-
     timebefore = glfwGetTime();
 
-    balls lballs(projection, radius, border);
+    balls lballs(*cam.getVP(), radius, border);
     gballs = &lballs;
 
     while (!window.ShouldClose()) {
@@ -87,7 +88,7 @@ int main()
         // draw border
         {
             borderShader.Bind();
-            glUniformMatrix4fv(mvp, 1, GL_FALSE, glm::value_ptr(projection));
+            glUniformMatrix4fv(mvp, 1, GL_FALSE, glm::value_ptr(*cam.getVP()));
             glBindVertexArray(vao_square);
             glUniform3f(color, 0, 1, 1);
             glDrawArrays(GL_LINE_LOOP, 0, 4);
