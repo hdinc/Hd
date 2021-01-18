@@ -10,7 +10,7 @@ class Window {
 public:
     Window(const char* name, int width, int height);
     ~Window();
-    GLFWwindow* Id() { return m_WindowId; }
+    GLFWwindow* Id() { return mWindowId; }
     void FullScreen(bool f);
     void VSync(bool v);
     void fpsLimit(int l);
@@ -27,19 +27,20 @@ public:
     Callback<void (*)(int, int)>& FrameBufferSizeCb;
 
 private:
-    GLFWwindow* m_WindowId;
-    bool m_Vsync = false;
-    int m_fpsLimit = 60;
-    int m_frame = 0;
+    GLFWwindow* mWindowId;
+    bool mVsync = false;
+    int mFpsLimit = 60;
+    int mFrame = 0;
+
     void waitFpsLimit();
 };
 
-inline bool Window::ShouldClose() { return glfwWindowShouldClose(m_WindowId); }
+inline bool Window::ShouldClose() { return glfwWindowShouldClose(mWindowId); }
 
 inline void Window::SwapBuffers()
 {
-    glfwSwapBuffers(m_WindowId);
-    m_frame++;
+    glfwSwapBuffers(mWindowId);
+    mFrame++;
 }
 
 inline void Window::PollEvents()
