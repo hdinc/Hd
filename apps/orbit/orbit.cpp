@@ -36,7 +36,7 @@ public:
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-        float g[c][2][2][2];
+        auto g = new float[c][2][2][2];
 
         for (int i = 0; i < c; i++) {
             g[i][0][0][0] = -c;
@@ -55,6 +55,8 @@ public:
             GL_ARRAY_BUFFER, c * 2 * 2 * 2 * sizeof(float), g, GL_STATIC_DRAW);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+        delete[] g;
     }
     void draw()
     {
