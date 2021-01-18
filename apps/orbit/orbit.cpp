@@ -11,6 +11,8 @@
 #include "circle.h"
 #include <stdio.h>
 
+void guifunc();
+
 class grid {
 public:
     GLuint vao, vbo;
@@ -195,6 +197,7 @@ int main()
     Hd::Window window("orbit", 1000, 1000);
     w = window.Id();
     Hd::Gui gui(window);
+    gui.addFunc(guifunc);
 
     Hd::Shader circle_shader(
         "../res/shaders/vertex.glsl", "../res/shaders/frag.glsl");
@@ -269,7 +272,7 @@ int main()
     return 0;
 }
 
-void Hd::Gui::GuiFunc()
+void guifunc()
 {
     ImGui::Begin("Hello, world!");
 

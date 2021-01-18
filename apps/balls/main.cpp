@@ -33,6 +33,7 @@ float total_energy;
 balls* gballs;
 glm::vec2 border(10, 10);
 Hd::Window* gwindow;
+void guifunc();
 
 int main()
 {
@@ -40,6 +41,7 @@ int main()
     window.fpsLimit(60);
     gwindow = &window;
     Hd::Gui gui(window);
+    gui.addFunc(guifunc);
     Hd::Shader borderShader(
         "../res/shaders/vertex.glsl", "../res/shaders/frag.glsl");
 
@@ -100,7 +102,7 @@ int main()
     }
 }
 
-void Hd::Gui::GuiFunc()
+void guifunc()
 {
     ImGui::Begin("properties");
     ImGui::Text("Total kinethic energy = %f", total_energy);
