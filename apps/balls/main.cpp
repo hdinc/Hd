@@ -23,6 +23,8 @@
 #include <cstdio>
 #include <math.h>
 
+void scroll_callback(double dx, double dy);
+
 float radius = 0.4f;
 float timescale = 1.0f;
 float mtime = 0.0f;
@@ -41,6 +43,7 @@ int main()
 {
     Hd::Window window("balls", 1280, 720);
     window.fpsLimit(60);
+    window.ScrollCb.addFunc(scroll_callback);
     gwindow = &window;
     Hd::Camera2D cam;
     gcam = &cam;
@@ -129,4 +132,11 @@ void guifunc()
     ImGui::Text("fps = %d", gwindow->getFps());
 
     ImGui::End();
+}
+
+void scroll_callback(double dx, double dy)
+{
+    if (ImGui::IsAnyWindowHovered())
+        return;
+    Hd::Camera2D::onScroll(gcam, dx, dy);
 }
