@@ -301,6 +301,7 @@ void Hd::Gui::GuiFunc()
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
+    (void)window;
     glViewport(0, 0, width, height);
     viewport_size.x = width;
     viewport_size.y = height;
@@ -311,6 +312,9 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
+    (void)window;
+    (void)xoffset;
+
     if (drag)
         return;
 
@@ -325,6 +329,9 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
+    (void)window;
+    (void)mods;
+
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
         drag = true;
         drag_start = get_viewportcoord();

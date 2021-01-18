@@ -7,7 +7,8 @@
 
 static void framecallback(int width, int height);
 static void glfw_error_callback(int error, const char* description);
-static void GLAPIENTRY messagecallback(GLenum source, GLenum type, GLuint id,
+static void GLAPIENTRY messagecallback(
+    GLenum source, GLenum type, GLuint id,
     GLenum severity, GLsizei length, const GLchar* message,
     const void* userParam);
 
@@ -47,7 +48,7 @@ Window::Window(const char* name, int width, int height)
     puts("OPENGL DEBUG CONTEXT = ON");
 #endif
 
-    m_WindowId = glfwCreateWindow(width, height, name, NULL, NULL);
+    mWindowId = glfwCreateWindow(width, height, name, NULL, NULL);
 
     glfwSetCursorPosCallback(mWindowId, cursor_position_callback);
     glfwSetKeyCallback(mWindowId, key_callback);
@@ -67,12 +68,12 @@ Window::Window(const char* name, int width, int height)
         GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, true);
 #endif
 
-    glfwSwapInterval(m_Vsync ? 1 : 0);
+    glfwSwapInterval(mVsync ? 1 : 0);
 }
 
 Window::~Window()
 {
-    glfwDestroyWindow(m_WindowId);
+    glfwDestroyWindow(mWindowId);
     glfwTerminate();
 }
 
@@ -84,19 +85,19 @@ void Window::FullScreen(bool f)
         if (fullscreen) {
             return;
         }
-        glfwGetWindowSize(m_WindowId, &wx, &wy);
-        glfwGetWindowPos(m_WindowId, &posx, &posy);
-        glfwSetWindowMonitor(m_WindowId, glfwGetPrimaryMonitor(), 0, 0, 1920,
+        glfwGetWindowSize(mWindowId, &wx, &wy);
+        glfwGetWindowPos(mWindowId, &posx, &posy);
+        glfwSetWindowMonitor(mWindowId, glfwGetPrimaryMonitor(), 0, 0, 1920,
             1080, GLFW_DONT_CARE);
-        glfwSwapInterval(m_Vsync ? 1 : 0);
+        glfwSwapInterval(mVsync ? 1 : 0);
         fullscreen = true;
         glViewport(0, 0, 1920, 1080);
         return;
     } else {
         if (fullscreen) {
             glfwSetWindowMonitor(
-                m_WindowId, NULL, posx, posy, wx, wy, GLFW_DONT_CARE);
-            glfwSwapInterval(m_Vsync ? 1 : 0);
+                mWindowId, NULL, posx, posy, wx, wy, GLFW_DONT_CARE);
+            glfwSwapInterval(mVsync ? 1 : 0);
             fullscreen = false;
             glViewport(0, 0, wx, wy);
             return;
@@ -107,15 +108,15 @@ void Window::FullScreen(bool f)
 
 void Window::VSync(bool b)
 {
-    m_Vsync = b;
-    glfwSwapInterval(m_Vsync ? 1 : 0);
+    mVsync = b;
+    glfwSwapInterval(mVsync ? 1 : 0);
 }
 
 void Window::waitFpsLimit()
 {
     static double oldtime = 0;
     double t;
-    t = glfwGetTime() - oldtime - 1.0 / (double)m_fpsLimit;
+    t = glfwGetTime() - oldtime - 1.0 / (double)mFpsLimit;
     if (t > 0)
         goto end;
     usleep(-t * 1e6);
@@ -126,7 +127,7 @@ end:
 void Window::fpsLimit(int a)
 {
     if (a >= 10)
-        m_fpsLimit = a;
+        mFpsLimit = a;
     else
         printf("[WINDOW]:cant limit fps under 10\n");
 }
@@ -138,8 +139,8 @@ int Window::getFps()
 
     if (glfwGetTime() - ltime > 1.0) {
         ltime = glfwGetTime();
-        fps = m_frame;
-        m_frame = 0;
+        fps = mFrame;
+        mFrame = 0;
     }
 
     return fps;
@@ -198,6 +199,9 @@ static void GLAPIENTRY messagecallback(GLenum source, GLenum type, GLuint id,
     GLenum severity, GLsizei length, const GLchar* message,
     const void* userParam)
 {
+    (void)userParam;
+    (void)length;
+
     // ignore non-significant error/warning codes
     if (id == 131169 || id == 131185 || id == 131218 || id == 131204)
         return;

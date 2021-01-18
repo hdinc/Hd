@@ -78,5 +78,8 @@ void Hd::Gui::GuiFunc()
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
+    (void)window;
+    (void)xoffset;
+
     izoom += yoffset * izoom / 2;
 }

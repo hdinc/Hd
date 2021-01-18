@@ -16,10 +16,10 @@ static int cindex = 1;
 const int balls::mCircleVertexCount = 20;
 
 balls::balls(glm::mat4& projection, float radius, glm::vec2 border)
-    : mProjection(projection)
+    : mBorder(border)
+    , mProjection(projection)
     , mShader("../res/shaders/balls.vert", "../res/shaders/balls.frag")
     , mComputeShader("../res/shaders/balls_compute.glsl")
-    , mBorder(border)
 {
     mRadius = radius;
 
@@ -94,10 +94,13 @@ void balls::initBalls()
     float xs = -mBorder.x / 2 + mRadius + 0.05;
     float ys = -mBorder.y / 2 + mRadius + 0.05;
     float d = 2 * mRadius + 0.05;
-    float k = mBorder.x / d;
+    int k = mBorder.x / d;
 
-    for (unsigned i = 0; i < mCount; i++) {
-        mLoc[i] = glm::vec2(xs + (i % (int)k) * d, ys + (i / (int)k) * d);
+    for (int i = 0; i < mCount; i++) {
+        float x = xs + (i % k) * d;
+        int dv = i / k;
+        float y = ys + dv * d;
+        mLoc[i] = glm::vec2(x, y);
         mSpeed[i] = glm::vec2(
             glm::linearRand(-.001f, .001f), glm::linearRand(-.001f, .001f));
     }
@@ -119,7 +122,7 @@ float balls::calculateTotalEnergy()
 {
     // to be implemented
     float total_energy = 0;
-    for (unsigned i = 0; i < mCount; i++) {
+    for (int i = 0; i < mCount; i++) {
         total_energy += (glm::length(mSpeed[i])) * (glm::length(mSpeed[i]));
     }
     return total_energy;
