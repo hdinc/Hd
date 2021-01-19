@@ -8,20 +8,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <Hd.h>
-#include <glm/common.hpp>
 #include <glm/glm.hpp>
-#include <glm/gtx/vector_angle.hpp>
-#include <glm/gtx/norm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/rotate_vector.hpp>
-#include <glm/gtc/random.hpp>
 #include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-#include <cmath>
 #include "balls.h"
-#include <cstdio>
-#include <math.h>
 
 void scroll_callback(double dx, double dy);
 void framebuffer_size_callback(int x, int y);
@@ -144,5 +134,5 @@ void scroll_callback(double dx, double dy)
 
 void framebuffer_size_callback(int x, int y)
 {
-    gcam->onFramebufferSizeChange(gcam, x, y);
+    Hd::Camera2D::onFramebufferSizeChange(gcam, x, y);
 }
