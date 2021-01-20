@@ -20,11 +20,20 @@ static Callback<void (*)(int, int, int, int)> gKeyCb;
 static Callback<void (*)(int, int, int)> gMouseButtonCb;
 static Callback<void (*)(int, int)> gFrameBufferSizeCb;
 
+const char* Hd::Window::mName = "Window";
+int Hd::Window::mSize[2] = { 1000, 1000 };
+
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
+Window& Window::getInstance()
+{
+    static Window window(mName, mSize[0], mSize[1]);
+    return window;
+}
 
 Window::Window(const char* name, int width, int height)
     : CursorPosCb(gCursorPosCb)
@@ -153,14 +162,15 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
         gCursorPosCb.mFunctions[i](xpos, ypos);
     }
 }
-void key_callback(
-    GLFWwindow* window, int key, int scancode, int action, int mods)
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     (void)window;
     for (int i = 0; i < gKeyCb.mCount; i++) {
         gKeyCb.mFunctions[i](key, scancode, action, mods);
     }
 }
+
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     (void)window;
@@ -168,6 +178,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         gMouseButtonCb.mFunctions[i](button, action, mods);
     }
 }
+
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     (void)window;
@@ -175,6 +186,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
         gScrollCb.mFunctions[i](xoffset, yoffset);
     }
 }
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     (void)window;

@@ -2,7 +2,9 @@
 
 int main()
 {
-    Hd::Window window("test", 500, 500);
+    Hd::Window::setName("test");
+    Hd::Window::setSize(500, 500);
+    auto& window = Hd::Window::getInstance();
 
     glClearColor(.3f, .6f, .4f, 1.f);
 

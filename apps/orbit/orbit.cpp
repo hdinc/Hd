@@ -196,7 +196,10 @@ int main()
     view = glm::scale(view, glm::vec3(camera_zoom));
     view = glm::translate(view, glm::vec3(camera_loc, 0.0f));
 
-    Hd::Window window("orbit", 1000, 1000);
+    Hd::Window::setSize(1000, 1000);
+    Hd::Window::setName("orbit");
+    auto& window = Hd::Window::getInstance();
+
     w = window.Id();
     Hd::Gui gui(window);
     gui.addFunc(guifunc);

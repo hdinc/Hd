@@ -26,16 +26,17 @@ bool pause = true;
 float total_energy;
 balls* gballs;
 glm::vec2 border(10, 10);
-Hd::Window* gwindow;
 Hd::Camera2D* gcam;
 
 int main()
 {
-    Hd::Window window("balls", 1280, 720);
+    Hd::Window::setSize(1280, 720);
+    Hd::Window::setName("balls");
+    auto& window = Hd::Window::getInstance();
+
     window.fpsLimit(60);
     window.ScrollCb.addFunc(scroll_callback);
     window.FrameBufferSizeCb.addFunc(framebuffer_size_callback);
-    gwindow = &window;
     Hd::Camera2D cam;
     gcam = &cam;
     cam.zoom(0.1);
@@ -120,7 +121,7 @@ void guifunc()
         mtime += deltatime;
     }
 
-    ImGui::Text("fps = %d", gwindow->getFps());
+    ImGui::Text("fps = %d", Hd::Window::getInstance().getFps());
 
     ImGui::End();
 }
