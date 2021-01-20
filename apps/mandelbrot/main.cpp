@@ -15,7 +15,10 @@ static float zoom = 1;
 
 int main()
 {
-    Hd::Window window("mandelbrot", 1280, 720);
+    Hd::Window::setName("mandelbrot");
+    Hd::Window::setSize(1280, 720);
+    auto& window = Hd::Window::getInstance();
+
     initializeImGui(window.Id());
 
     float square[] = { -1.f, -1.f, -1.f, 1.f, 1.f, -1.f, 1.f, 1.f };

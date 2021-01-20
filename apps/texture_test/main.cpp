@@ -12,7 +12,10 @@ static float izoom = 1;
 
 int main()
 {
-    Hd::Window window("test", 500, 500);
+    Hd::Window::setName("test");
+    Hd::Window::setSize(500, 500);
+    auto& window = Hd::Window::getInstance();
+
     Hd::Shader shader(
         "../res/shaders/vertex.glsl", "../res/shaders/texture.glsl");
     Hd::Texture texture("../res/textures/diyojen.png");
