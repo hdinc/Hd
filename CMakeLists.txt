@@ -19,7 +19,6 @@ set(SRC
     src/Hd/Gui.cpp
     src/Hd/FrameBuffer.cpp
     src/Hd/Camera2D.cpp
-    src/Hd/WindowCallbacks.cpp
 )
 
 add_library(Hd ${SRC})

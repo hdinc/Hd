@@ -2,6 +2,7 @@
 
 #include <GLFW/glfw3.h>
 #include <Hd/WindowCallbacks.h>
+#include <glm/glm.hpp>
 
 namespace Hd {
 
@@ -24,12 +25,15 @@ public:
     void WaitEvents();
     bool ShouldClose();
     int getFps();
+    glm::vec2 getFramebufferSize();
+    glm::vec2 getMousePos();
 
-    Callback<void (*)(double, double)>& CursorPosCb;
-    Callback<void (*)(double, double)>& ScrollCb;
-    Callback<void (*)(int, int, int, int)>& KeyCb;
-    Callback<void (*)(int, int, int)>& MouseButtonCb;
-    Callback<void (*)(int, int)>& FrameBufferSizeCb;
+    // TODO: fix this smelly mess
+    Callback<void (*)(double, double), double, double>& CursorPosCb;
+    Callback<void (*)(double, double), double, double>& ScrollCb;
+    Callback<void (*)(int, int, int, int), int, int, int, int>& KeyCb;
+    Callback<void (*)(int, int, int), int, int, int>& MouseButtonCb;
+    Callback<void (*)(int, int), int, int>& FramebufferSizeCb;
 
 private:
     Window(const char* name, int width, int height);
@@ -39,11 +43,19 @@ private:
     bool mVsync = false;
     int mFpsLimit = 60;
     int mFrame = 0;
+    glm::vec2 mFramebufferSize;
 
     static const char* mName;
     static int mSize[2];
 
     void waitFpsLimit();
+
+    //TODO: this is probably a bad practice
+    friend void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
+    friend void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    friend void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+    friend void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+    friend void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 };
 
 inline bool Window::ShouldClose() { return glfwWindowShouldClose(mWindowId); }
@@ -74,6 +86,11 @@ inline void Window::WaitEvents()
 {
     waitFpsLimit();
     glfwWaitEvents();
+}
+
+inline glm::vec2 Window::getFramebufferSize()
+{
+    return mFramebufferSize;
 }
 
 }

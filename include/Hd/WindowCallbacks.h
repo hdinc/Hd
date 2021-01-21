@@ -1,15 +1,45 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
+#include <stdio.h>
 
 namespace Hd {
 
-template <typename T>
+template <typename T, typename... arg>
 class Callback {
 
 public:
-    int addFunc(T function);
-    void removeFunc(int n);
+    int addFunc(T function)
+    {
+        if (mCount >= maxcount_) {
+            printf("[WINDOW]:max callback count exceeded\n");
+            return -1;
+        }
+        mFunctions[mCount] = function;
+        mIds[mCount] = ++mIdCount;
+        mCount++;
+        return mIdCount;
+    }
+
+    void removeFunc(int n)
+    {
+        for (int i = 0; i < mCount; i++) {
+            if (mIds[i] == n) {
+                mFunctions[i] = mFunctions[mCount];
+                mIds[i] = mIds[mCount];
+                mCount--;
+                return;
+            }
+        }
+        printf("[WINDOW]:invalid callback id\n");
+    }
+
+    void run(arg... args)
+    {
+        for (int i = 0; i < mCount; i++) {
+            mFunctions[i](args...);
+        }
+    }
 
 private:
     static const int maxcount_ = 20;
@@ -17,13 +47,6 @@ private:
     int mIdCount = 0;
     T mFunctions[maxcount_] = { 0 };
     int mIds[maxcount_] = { 0 };
-
-    // this is probably a bad practice
-    friend void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
-    friend void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-    friend void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-    friend void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-    friend void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 };
 
 }
