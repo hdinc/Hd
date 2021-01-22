@@ -4,4 +4,3 @@ input lag?
 https://stackoverflow.com/questions/19102189/noticable-lag-in-a-simple-opengl-program-with-mouse-input-through-glfw
 Where should the swapbuffers and pollevents be? Main loop order?
 use std::function for callbacks
-cross platform sleep function (std::this_thread::sleep_for(std::chrono::milliseconds(n)))
