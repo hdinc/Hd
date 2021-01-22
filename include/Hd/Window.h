@@ -29,11 +29,11 @@ public:
     glm::vec2 getMousePos();
 
     // TODO: fix this smelly mess
-    Callback<void (*)(double, double), double, double>& CursorPosCb;
-    Callback<void (*)(double, double), double, double>& ScrollCb;
-    Callback<void (*)(int, int, int, int), int, int, int, int>& KeyCb;
-    Callback<void (*)(int, int, int), int, int, int>& MouseButtonCb;
-    Callback<void (*)(int, int), int, int>& FramebufferSizeCb;
+    Callback<void (*)(void*, double, double), double, double>& CursorPosCb;
+    Callback<void (*)(void*, double, double), double, double>& ScrollCb;
+    Callback<void (*)(void*, int, int, int, int), int, int, int, int>& KeyCb;
+    Callback<void (*)(void*, int, int, int), int, int, int>& MouseButtonCb;
+    Callback<void (*)(void*, int, int), int, int>& FramebufferSizeCb;
 
 private:
     Window(const char* name, int width, int height);

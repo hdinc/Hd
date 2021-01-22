@@ -15,11 +15,11 @@ static void GLAPIENTRY messagecallback(
 namespace Hd {
 
 // TODO: make callbacks member of window instead of reference
-static Callback<void (*)(double, double), double, double> gCursorPosCb;
-static Callback<void (*)(double, double), double, double> gScrollCb;
-static Callback<void (*)(int, int, int, int), int, int, int, int> gKeyCb;
-static Callback<void (*)(int, int, int), int, int, int> gMouseButtonCb;
-static Callback<void (*)(int, int), int, int> gFramebufferSizeCb;
+static Callback<void (*)(void*, double, double), double, double> gCursorPosCb;
+static Callback<void (*)(void*, double, double), double, double> gScrollCb;
+static Callback<void (*)(void*, int, int, int, int), int, int, int, int> gKeyCb;
+static Callback<void (*)(void*, int, int, int), int, int, int> gMouseButtonCb;
+static Callback<void (*)(void*, int, int), int, int> gFramebufferSizeCb;
 
 const char* Hd::Window::mName = "Window";
 int Hd::Window::mSize[2] = { 1000, 1000 };

@@ -9,7 +9,7 @@ template <typename T, typename... arg>
 class Callback {
 
 public:
-    int addFunc(T function)
+    int addFunc(void* obj, T function)
     {
         if (mCount >= maxcount_) {
             printf("[WINDOW]:max callback count exceeded\n");
@@ -17,6 +17,7 @@ public:
         }
         mFunctions[mCount] = function;
         mIds[mCount] = ++mIdCount;
+        mObjs[mCount] = obj;
         mCount++;
         return mIdCount;
     }
@@ -27,6 +28,7 @@ public:
             if (mIds[i] == n) {
                 mFunctions[i] = mFunctions[mCount];
                 mIds[i] = mIds[mCount];
+                mObjs[i] = mObjs[mCount];
                 mCount--;
                 return;
             }
@@ -37,7 +39,7 @@ public:
     void run(arg... args)
     {
         for (int i = 0; i < mCount; i++) {
-            mFunctions[i](args...);
+            mFunctions[i](mObjs[i], args...);
         }
     }
 
@@ -47,6 +49,7 @@ private:
     int mIdCount = 0;
     T mFunctions[maxcount_] = { 0 };
     int mIds[maxcount_] = { 0 };
+    void* mObjs[maxcount_] = { 0 };
 };
 
 }

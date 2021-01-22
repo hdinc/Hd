@@ -17,14 +17,14 @@ public:
     void move(glm::vec2 d);
     void zoom(float zoom);
 
-    template <Camera2D& c, bool hasImgui>
-    static void setupInput();
-
     glm::mat4* getView();
     glm::mat4* getProjection();
     glm::mat4* getVP();
     glm::vec2 getLoc();
     float getZoom();
+
+    template <bool hasImgui>
+    void setupInput();
 
 private:
     glm::mat4 mView;
@@ -33,6 +33,7 @@ private:
     glm::vec2 mLoc;
     glm::vec2 mBorder;
     float mZoom;
+
     bool mDrag = false;
     glm::vec2 mDragStart;
 
@@ -41,17 +42,17 @@ private:
 
     void updateData();
 
-    template <Camera2D& c, bool hasImgui>
-    static void onScroll(double dx, double dy);
+    template <bool hasImgui>
+    static void onScroll(void* cam, double dx, double dy);
 
-    template <Camera2D& c, bool hasImgui>
-    static void onFramebufferSizeChange(int x, int y);
+    template <bool hasImgui>
+    static void onFramebufferSizeChange(void* cam, int x, int y);
 
-    template <Camera2D& c, bool hasImgui>
-    static void onMouseMovement(double x, double y);
+    template <bool hasImgui>
+    static void onMouseMovement(void* cam, double x, double y);
 
-    template <Camera2D& c, bool hasImgui>
-    static void onMouseButtonClick(int button, int action, int mods);
+    template <bool hasImgui>
+    static void onMouseButtonClick(void* cam, int button, int action, int mods);
 };
 
 inline void Camera2D::zoom(float zoom)
@@ -87,54 +88,60 @@ inline glm::mat4* Camera2D::getVP() { return &mVP; }
 inline glm::vec2 Camera2D::getLoc() { return mLoc; }
 inline float Camera2D::getZoom() { return mZoom; }
 
-template <Camera2D& c, bool hasImgui>
-void Camera2D::onScroll(double dx, double dy)
+template <bool hasImgui>
+void Camera2D::onScroll(void* cam, double dx, double dy)
 {
-    (void)dx;
     if (hasImgui) {
         if (ImGui::IsAnyWindowHovered())
             return;
     }
 
-    if (c.mDrag)
+    (void)dx;
+    auto c = static_cast<Camera2D*>(cam);
+
+    if (c->mDrag)
         return;
 
-    float z = c.getZoom();
+    float z = c->getZoom();
     z *= (dy > 0) ? 1.1 : 1 / 1.1;
-    c.zoom(z);
+    c->zoom(z);
 }
 
-template <Camera2D& c, bool hasImgui>
-void Camera2D::onFramebufferSizeChange(int x, int y)
+template <bool hasImgui>
+void Camera2D::onFramebufferSizeChange(void* cam, int x, int y)
 {
+    auto c = static_cast<Camera2D*>(cam);
     auto s = (x > y) ? glm::vec2((float)y / x, 1) : glm::vec2(1, (float)x / y);
-    c.mProjection = glm::scale(glm::mat4(1), glm::vec3(s, 1));
-    c.mVP = c.mProjection * c.mView;
+    c->mProjection = glm::scale(glm::mat4(1), glm::vec3(s, 1));
+    c->mVP = c->mProjection * c->mView;
 }
 
-template <Camera2D& c, bool hasImgui>
-void Camera2D::onMouseMovement(double x, double y)
+template <bool hasImgui>
+void Camera2D::onMouseMovement(void* cam, double x, double y)
 {
+    if (hasImgui) {
+        if (ImGui::IsAnyWindowHovered())
+            return;
+    }
+
     (void)x;
     (void)y;
 
-    if (hasImgui) {
-        if (ImGui::IsAnyWindowHovered())
-            return;
-    }
+    auto c = static_cast<Camera2D*>(cam);
     auto& w = Hd::Window::getInstance();
-    if (c.mDrag) {
-        auto a = w.getMousePos() - c.mDragStart;
+
+    if (c->mDrag) {
+        auto a = w.getMousePos() - c->mDragStart;
         a.y /= w.getFramebufferSize().x / w.getFramebufferSize().y;
-        a /= c.mZoom;
-        c.mView = glm::scale(glm::mat4(1), glm::vec3(c.mZoom));
-        c.mView = glm::translate(c.mView, glm::vec3(a - c.mLoc, 0.0));
+        a /= c->mZoom;
+        c->mView = glm::scale(glm::mat4(1), glm::vec3(c->mZoom));
+        c->mView = glm::translate(c->mView, glm::vec3(a - c->mLoc, 0.0));
     }
-    c.mVP = c.mProjection * c.mView;
+    c->mVP = c->mProjection * c->mView;
 }
 
-template <Camera2D& c, bool hasImgui>
-void Camera2D::onMouseButtonClick(int button, int action, int mods)
+template <bool hasImgui>
+void Camera2D::onMouseButtonClick(void* cam, int button, int action, int mods)
 {
     if (hasImgui) {
         if (ImGui::IsAnyWindowHovered())
@@ -143,38 +150,40 @@ void Camera2D::onMouseButtonClick(int button, int action, int mods)
 
     (void)mods;
 
+    auto c = static_cast<Camera2D*>(cam);
+
     auto& w = Hd::Window::getInstance();
 
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS && c.mDrag == false) {
-        c.mDrag = true;
-        c.mDragStart = w.getMousePos();
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS && c->mDrag == false) {
+        c->mDrag = true;
+        c->mDragStart = w.getMousePos();
     }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE && c.mDrag == true) {
-        c.mDrag = false;
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE && c->mDrag == true) {
+        c->mDrag = false;
 
-        auto a = w.getMousePos() - c.mDragStart;
+        auto a = w.getMousePos() - c->mDragStart;
         a.y /= w.getFramebufferSize().x / w.getFramebufferSize().y;
-        a /= c.mZoom;
-        c.mLoc -= a;
+        a /= c->mZoom;
+        c->mLoc -= a;
     }
-    c.updateData();
+    c->updateData();
 }
 
-template <Camera2D& c, bool hasImgui>
+template <bool hasImgui>
 void Camera2D::setupInput()
 {
-    c.isinputSUp = true;
+    isinputSUp = true;
     auto& w = Hd::Window::getInstance();
 
-    auto f1 = Camera2D::onScroll<c, hasImgui>;
-    auto f2 = Camera2D::onFramebufferSizeChange<c, hasImgui>;
-    auto f3 = Camera2D::onMouseMovement<c, hasImgui>;
-    auto f4 = Camera2D::onMouseButtonClick<c, hasImgui>;
+    auto f1 = Camera2D::onScroll<hasImgui>;
+    auto f2 = Camera2D::onFramebufferSizeChange<hasImgui>;
+    auto f3 = Camera2D::onMouseMovement<hasImgui>;
+    auto f4 = Camera2D::onMouseButtonClick<hasImgui>;
 
-    c.callbacks[0] = w.ScrollCb.addFunc(f1);
-    c.callbacks[1] = w.FramebufferSizeCb.addFunc(f2);
-    c.callbacks[2] = w.CursorPosCb.addFunc(f3);
-    c.callbacks[3] = w.MouseButtonCb.addFunc(f4);
+    callbacks[0] = w.ScrollCb.addFunc(this, f1);
+    callbacks[1] = w.FramebufferSizeCb.addFunc(this, f2);
+    callbacks[2] = w.CursorPosCb.addFunc(this, f3);
+    callbacks[3] = w.MouseButtonCb.addFunc(this, f4);
 }
 
 }
