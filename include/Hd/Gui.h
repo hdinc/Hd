@@ -1,7 +1,6 @@
 #pragma once
 
 #include <imgui.h>
-#include <Hd/Window.h>
 
 namespace Hd {
 
@@ -9,7 +8,7 @@ typedef void (*guifunc)();
 
 class Gui {
 public:
-    Gui(Hd::Window& w);
+    Gui();
     ~Gui();
     void Draw();
 
