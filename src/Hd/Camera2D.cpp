@@ -7,6 +7,7 @@ namespace Hd {
 Camera2D::Camera2D()
     : mView(1)
     , mProjection(1)
+    , mLoc(0)
     , mZoom(1)
 {
 }
