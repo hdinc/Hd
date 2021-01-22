@@ -41,6 +41,7 @@ private:
 
     GLFWwindow* mWindowId;
     bool mVsync = false;
+    bool hasGui = false;
     int mFpsLimit = 60;
     int mFrame = 0;
     glm::vec2 mFramebufferSize;
@@ -50,6 +51,7 @@ private:
 
     void waitFpsLimit();
 
+    friend class Gui;
     //TODO: this is probably a bad practice
     friend void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
     friend void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);

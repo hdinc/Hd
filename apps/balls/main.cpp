@@ -37,7 +37,7 @@ int main()
     cam.zoom(0.1);
     cam.setupInput<true>();
 
-    Hd::Gui gui(window);
+    Hd::Gui gui;
     gui.addFunc(guifunc);
     Hd::Shader borderShader(
         "../res/shaders/vertex.glsl", "../res/shaders/frag.glsl");
