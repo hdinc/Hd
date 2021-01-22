@@ -52,6 +52,8 @@ private:
     void waitFpsLimit();
 
     friend class Gui;
+    friend class Camera2D;
+
     //TODO: this is probably a bad practice
     friend void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
     friend void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
