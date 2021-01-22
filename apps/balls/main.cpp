@@ -13,8 +13,6 @@
 #include <imgui.h>
 #include "balls.h"
 
-void scroll_callback(double dx, double dy);
-void framebuffer_size_callback(int x, int y);
 void guifunc();
 
 float radius = 0.4f;
@@ -26,7 +24,7 @@ bool pause = true;
 float total_energy;
 balls* gballs;
 glm::vec2 border(10, 10);
-Hd::Camera2D* gcam;
+Hd::Camera2D cam;
 
 int main()
 {
@@ -35,11 +33,10 @@ int main()
     auto& window = Hd::Window::getInstance();
 
     window.fpsLimit(60);
-    window.ScrollCb.addFunc(scroll_callback);
-    window.FrameBufferSizeCb.addFunc(framebuffer_size_callback);
-    Hd::Camera2D cam;
-    gcam = &cam;
+
     cam.zoom(0.1);
+    Hd::Camera2D::setupInput<cam, true>();
+
     Hd::Gui gui(window);
     gui.addFunc(guifunc);
     Hd::Shader borderShader(
@@ -124,16 +121,4 @@ void guifunc()
     ImGui::Text("fps = %d", Hd::Window::getInstance().getFps());
 
     ImGui::End();
-}
-
-void scroll_callback(double dx, double dy)
-{
-    if (ImGui::IsAnyWindowHovered())
-        return;
-    Hd::Camera2D::onScroll(gcam, dx, dy);
-}
-
-void framebuffer_size_callback(int x, int y)
-{
-    Hd::Camera2D::onFramebufferSizeChange(gcam, x, y);
 }
