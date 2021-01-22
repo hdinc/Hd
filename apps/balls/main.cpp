@@ -24,18 +24,18 @@ bool pause = true;
 float total_energy;
 balls* gballs;
 glm::vec2 border(10, 10);
-Hd::Camera2D cam;
 
 int main()
 {
     Hd::Window::setSize(1280, 720);
     Hd::Window::setName("balls");
     auto& window = Hd::Window::getInstance();
+    Hd::Camera2D cam;
 
     window.fpsLimit(60);
 
     cam.zoom(0.1);
-    Hd::Camera2D::setupInput<cam, true>();
+    cam.setupInput<true>();
 
     Hd::Gui gui(window);
     gui.addFunc(guifunc);
