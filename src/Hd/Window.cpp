@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <unistd.h>
+#include <chrono>
+#include <thread>
 
 #include <Hd/Window.h>
 
@@ -125,10 +126,8 @@ void Window::waitFpsLimit()
     static double oldtime = 0;
     double t;
     t = glfwGetTime() - oldtime - 1.0 / (double)mFpsLimit;
-    if (t > 0)
-        goto end;
-    usleep(-t * 1e6);
-end:
+    if (t < 0)
+        std::this_thread::sleep_for(std::chrono::microseconds((int)(-t * 1e6)));
     oldtime = glfwGetTime();
 }
 
