@@ -26,10 +26,6 @@ Camera2D::~Camera2D()
 
 void Camera2D::onScroll(void* cam, double dx, double dy)
 {
-    if (Window::getInstance().hasGui)
-        if (ImGui::IsAnyWindowHovered())
-            return;
-
     (void)dx;
     auto c = static_cast<Camera2D*>(cam);
 
@@ -51,10 +47,6 @@ void Camera2D::onFramebufferSizeChange(void* cam, int x, int y)
 
 void Camera2D::onMouseMovement(void* cam, double x, double y)
 {
-    if (Window::getInstance().hasGui)
-        if (ImGui::IsAnyWindowHovered())
-            return;
-
     (void)x;
     (void)y;
 
@@ -73,10 +65,6 @@ void Camera2D::onMouseMovement(void* cam, double x, double y)
 
 void Camera2D::onMouseButtonClick(void* cam, int button, int action, int mods)
 {
-    if (Window::getInstance().hasGui)
-        if (ImGui::IsAnyWindowHovered())
-            return;
-
     (void)mods;
 
     auto c = static_cast<Camera2D*>(cam);

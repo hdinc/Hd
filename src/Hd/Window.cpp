@@ -5,6 +5,7 @@
 #include <thread>
 
 #include <Hd/Window.h>
+#include <imgui.h>
 
 static void glfw_error_callback(int error, const char* description);
 static void GLAPIENTRY messagecallback(
@@ -13,6 +14,8 @@ static void GLAPIENTRY messagecallback(
     const void* userParam);
 
 namespace Hd {
+
+Window* gWindow;
 
 // TODO: make callbacks member of window instead of reference
 static Callback<void (*)(void*, double, double), double, double> gCursorPosCb;
@@ -78,6 +81,8 @@ Window::Window(const char* name, int width, int height)
 #endif
 
     glfwSwapInterval(mVsync ? 1 : 0);
+
+    gWindow = this;
 }
 
 Window::~Window()
@@ -173,18 +178,33 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     (void)window;
+
+    if (gWindow->hasGui)
+        if (ImGui::IsAnyWindowHovered())
+            return;
+
     gKeyCb.run(key, scancode, action, mods);
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     (void)window;
+
+    if (gWindow->hasGui)
+        if (ImGui::IsAnyWindowHovered())
+            return;
+
     gMouseButtonCb.run(button, action, mods);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     (void)window;
+
+    if (gWindow->hasGui)
+        if (ImGui::IsAnyWindowHovered())
+            return;
+
     gScrollCb.run(xoffset, yoffset);
 }
 
