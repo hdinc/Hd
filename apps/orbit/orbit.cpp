@@ -201,7 +201,7 @@ int main()
     auto& window = Hd::Window::getInstance();
 
     w = window.Id();
-    Hd::Gui gui(window);
+    Hd::Gui gui;
     gui.addFunc(guifunc);
 
     Hd::Shader circle_shader(

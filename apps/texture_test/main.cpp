@@ -19,7 +19,7 @@ int main()
     Hd::Shader shader(
         "../res/shaders/vertex.glsl", "../res/shaders/texture.glsl");
     Hd::Texture texture("../res/textures/diyojen.png");
-    Hd::Gui gui(window);
+    Hd::Gui gui;
     gui.addFunc(guifunc);
 
     glfwSetScrollCallback(window.Id(), scroll_callback);
