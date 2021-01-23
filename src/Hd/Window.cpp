@@ -83,6 +83,13 @@ Window::Window(const char* name, int width, int height)
     glfwSwapInterval(mVsync ? 1 : 0);
 
     gWindow = this;
+
+    double dx, dy;
+    int ix, iy;
+    glfwGetCursorPos(mWindowId, &dx, &dy);
+    glfwGetFramebufferSize(mWindowId, &ix, &iy);
+    cursor_position_callback(mWindowId, dx, dy);
+    framebuffer_size_callback(mWindowId, ix, iy);
 }
 
 Window::~Window()
@@ -146,6 +153,7 @@ void Window::fpsLimit(int a)
 
 int Window::getFps()
 {
+    // TODO: fix me
     static int fps = 0;
     static double ltime = glfwGetTime();
 
@@ -158,20 +166,16 @@ int Window::getFps()
     return fps;
 }
 
-glm::vec2 Window::getMousePos()
-{
-    double x, y;
-    glfwGetCursorPos(mWindowId, &x, &y);
-    glm::vec2 screencoord(x, y);
-
-    auto r = screencoord / mFramebufferSize;
-    r.y = -r.y;
-    return glm::vec2(2) * (r - glm::vec2(0.5, -0.5));
-}
-
 void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
     (void)window;
+
+    glm::vec2 screencoord(xpos, ypos);
+
+    auto r = screencoord / gWindow->mFramebufferSize;
+    r.y = -r.y;
+    gWindow->mMousePos = glm::vec2(2) * (r - glm::vec2(0.5, -0.5));
+
     gCursorPosCb.run(xpos, ypos);
 }
 
@@ -211,8 +215,9 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     (void)window;
+
     gFramebufferSizeCb.run(width, height);
-    Window::getInstance().mFramebufferSize = glm::vec2(width, height);
+    gWindow->mFramebufferSize = glm::vec2(width, height);
     glViewport(0, 0, width, height);
 }
 

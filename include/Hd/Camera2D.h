@@ -30,6 +30,7 @@ private:
     glm::mat4 mVP;
     glm::vec2 mLoc;
     glm::vec2 mBorder;
+    glm::vec2 mFramebufferScale;
     float mZoom;
 
     bool mDrag = false;
