@@ -45,6 +45,7 @@ private:
     int mFpsLimit = 60;
     int mFrame = 0;
     glm::vec2 mFramebufferSize;
+    glm::vec2 mMousePos;
 
     static const char* mName;
     static int mSize[2];
@@ -95,6 +96,11 @@ inline void Window::WaitEvents()
 inline glm::vec2 Window::getFramebufferSize()
 {
     return mFramebufferSize;
+}
+
+inline glm::vec2 Window::getMousePos()
+{
+    return mMousePos;
 }
 
 }
