@@ -1,6 +1,10 @@
 #include <Hd/Camera2D.h>
+#include <Hd/Window.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+#include <functional>
 
 namespace Hd {
 
@@ -16,88 +20,82 @@ Camera2D::Camera2D()
 
 Camera2D::~Camera2D()
 {
-    if (isinputSUp) {
-
-        gWindow->ScrollCb.removeFunc(callbacks[0]);
-        gWindow->FramebufferSizeCb.removeFunc(callbacks[1]);
-        gWindow->CursorPosCb.removeFunc(callbacks[2]);
-        gWindow->MouseButtonCb.removeFunc(callbacks[3]);
+    if (inputSUp) {
+        gWindow->ScrollCb.remove(ids[0]);
+        gWindow->FramebufferSizeCb.remove(ids[1]);
+        gWindow->CursorPosCb.remove(ids[2]);
+        gWindow->MouseButtonCb.remove(ids[3]);
     }
 }
 
-void Camera2D::onScroll(void* cam, double dx, double dy)
+void Camera2D::onScroll(double dx, double dy)
 {
     (void)dx;
-    auto c = static_cast<Camera2D*>(cam);
 
-    if (c->mDrag)
+    if (mDrag)
         return;
 
-    float z = c->getZoom();
+    float z = getZoom();
     z *= (dy > 0) ? 1.1 : 1 / 1.1;
-    c->zoom(z);
+    zoom(z);
 }
 
-void Camera2D::onFramebufferSizeChange(void* cam, int x, int y)
+void Camera2D::onFramebufferSizeChange(int x, int y)
 {
-    auto c = static_cast<Camera2D*>(cam);
-    c->mFramebufferScale = (x > y) ? glm::vec2((float)y / x, 1) : glm::vec2(1, (float)x / y);
-    c->mProjection = glm::scale(glm::mat4(1), glm::vec3(c->mFramebufferScale, 1));
-    c->mVP = c->mProjection * c->mView;
+    mFramebufferScale = (x > y) ? glm::vec2((float)y / x, 1) : glm::vec2(1, (float)x / y);
+    mProjection = glm::scale(glm::mat4(1), glm::vec3(mFramebufferScale, 1));
+    mVP = mProjection * mView;
 }
 
-void Camera2D::onMouseMovement(void* cam, double x, double y)
+void Camera2D::onMouseMovement(double x, double y)
 {
     (void)x;
     (void)y;
 
-    auto c = static_cast<Camera2D*>(cam);
+    if (mDrag) {
+        auto a = gWindow->getMousePos() - mDragStart;
 
-    if (c->mDrag) {
-        auto a = gWindow->getMousePos() - c->mDragStart;
-
-        a /= c->mFramebufferScale;
-        a /= c->mZoom;
-        c->mView = glm::scale(glm::mat4(1), glm::vec3(c->mZoom));
-        c->mView = glm::translate(c->mView, glm::vec3(a - c->mLoc, 0.0));
+        a /= mFramebufferScale;
+        a /= mZoom;
+        mView = glm::scale(glm::mat4(1), glm::vec3(mZoom));
+        mView = glm::translate(mView, glm::vec3(a - mLoc, 0.0));
     }
-    c->mVP = c->mProjection * c->mView;
+    mVP = mProjection * mView;
 }
 
-void Camera2D::onMouseButtonClick(void* cam, int button, int action, int mods)
+void Camera2D::onMouseButtonClick(int button, int action, int mods)
 {
     (void)mods;
 
-    auto c = static_cast<Camera2D*>(cam);
-
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS && c->mDrag == false) {
-        c->mDrag = true;
-        c->mDragStart = gWindow->getMousePos();
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS && mDrag == false) {
+        mDrag = true;
+        mDragStart = gWindow->getMousePos();
     }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE && c->mDrag == true) {
-        c->mDrag = false;
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE && mDrag == true) {
+        mDrag = false;
 
-        auto a = gWindow->getMousePos() - c->mDragStart;
-        a /= c->mFramebufferScale;
-        a /= c->mZoom;
-        c->mLoc -= a;
+        auto a = gWindow->getMousePos() - mDragStart;
+        a /= mFramebufferScale;
+        a /= mZoom;
+        mLoc -= a;
     }
-    c->updateData();
+    updateData();
 }
 
 void Camera2D::setupInput()
 {
-    isinputSUp = true;
+    inputSUp = true;
 
-    auto f1 = Camera2D::onScroll;
-    auto f2 = Camera2D::onFramebufferSizeChange;
-    auto f3 = Camera2D::onMouseMovement;
-    auto f4 = Camera2D::onMouseButtonClick;
+    using namespace std::placeholders;
+    auto f1 = std::bind(&Camera2D::onScroll, this, _1, _2);
+    auto f2 = std::bind(&Camera2D::onFramebufferSizeChange, this, _1, _2);
+    auto f3 = std::bind(&Camera2D::onMouseMovement, this, _1, _2);
+    auto f4 = std::bind(&Camera2D::onMouseButtonClick, this, _1, _2, _3);
 
-    callbacks[0] = gWindow->ScrollCb.addFunc(this, f1);
-    callbacks[1] = gWindow->FramebufferSizeCb.addFunc(this, f2);
-    callbacks[2] = gWindow->CursorPosCb.addFunc(this, f3);
-    callbacks[3] = gWindow->MouseButtonCb.addFunc(this, f4);
+    ids[0] = gWindow->ScrollCb.add(f1);
+    ids[1] = gWindow->FramebufferSizeCb.add(f2);
+    ids[2] = gWindow->CursorPosCb.add(f3);
+    ids[3] = gWindow->MouseButtonCb.add(f4);
 }
 
 }

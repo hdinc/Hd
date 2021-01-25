@@ -1,8 +1,9 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
-#include <Hd/WindowCallbacks.h>
 #include <glm/glm.hpp>
+
+#include <Hd/WindowCallbacks.h>
 
 namespace Hd {
 
@@ -28,15 +29,14 @@ public:
     glm::vec2 getFramebufferSize();
     glm::vec2 getMousePos();
 
-    // TODO: fix this smelly mess
-    Callback<void (*)(void*, double, double), double, double>& CursorPosCb;
-    Callback<void (*)(void*, double, double), double, double>& ScrollCb;
-    Callback<void (*)(void*, int, int, int, int), int, int, int, int>& KeyCb;
-    Callback<void (*)(void*, int, int, int), int, int, int>& MouseButtonCb;
-    Callback<void (*)(void*, int, int), int, int>& FramebufferSizeCb;
+    Callback<void(double, double)> CursorPosCb;
+    Callback<void(double, double)> ScrollCb;
+    Callback<void(int, int, int, int)> KeyCb;
+    Callback<void(int, int, int)> MouseButtonCb;
+    Callback<void(int, int)> FramebufferSizeCb;
 
 private:
-    Window(const char* name, int width, int height);
+    Window();
     ~Window();
 
     GLFWwindow* mWindowId;
@@ -52,15 +52,13 @@ private:
 
     void waitFpsLimit();
 
-    friend class Gui;
-    friend class Camera2D;
+    static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
+    static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+    static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+    static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-    //TODO: this is probably a bad practice
-    friend void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
-    friend void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-    friend void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-    friend void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-    friend void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+    friend class Gui;
 };
 
 inline bool Window::ShouldClose() { return glfwWindowShouldClose(mWindowId); }

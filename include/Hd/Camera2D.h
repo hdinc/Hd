@@ -2,7 +2,6 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <Hd/Window.h>
 
 namespace Hd {
 
@@ -36,15 +35,14 @@ private:
     bool mDrag = false;
     glm::vec2 mDragStart;
 
-    bool isinputSUp = false;
-    int callbacks[4] = { 0 };
-
     void updateData();
 
-    static void onScroll(void* cam, double dx, double dy);
-    static void onFramebufferSizeChange(void* cam, int x, int y);
-    static void onMouseMovement(void* cam, double x, double y);
-    static void onMouseButtonClick(void* cam, int button, int action, int mods);
+    bool inputSUp = false;
+    int ids[4] = { 0 };
+    void onScroll(double dx, double dy);
+    void onFramebufferSizeChange(int x, int y);
+    void onMouseMovement(double x, double y);
+    void onMouseButtonClick(int button, int action, int mods);
 };
 
 inline void Camera2D::zoom(float zoom)
