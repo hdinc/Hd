@@ -2,54 +2,35 @@
 
 #include <GLFW/glfw3.h>
 #include <stdio.h>
+#include <functional>
+#include <vector>
 
 namespace Hd {
 
-template <typename T, typename... arg>
+template <typename T>
 class Callback {
 
 public:
-    int addFunc(void* obj, T function)
+    int add(std::function<T> f)
     {
-        if (mCount >= maxcount_) {
-            printf("[WINDOW]:max callback count exceeded\n");
-            return -1;
-        }
-        mFunctions[mCount] = function;
-        mIds[mCount] = ++mIdCount;
-        mObjs[mCount] = obj;
-        mCount++;
-        return mIdCount;
+        mFunctions.push_back(std::pair<int, std::function<T>>(++id, f));
+        return id;
     }
 
-    void removeFunc(int n)
+    void remove(int id)
     {
-        for (int i = 0; i < mCount; i++) {
-            if (mIds[i] == n) {
-                mFunctions[i] = mFunctions[mCount];
-                mIds[i] = mIds[mCount];
-                mObjs[i] = mObjs[mCount];
-                mCount--;
-                return;
-            }
-        }
-        printf("[WINDOW]:invalid callback id\n");
-    }
-
-    void run(arg... args)
-    {
-        for (int i = 0; i < mCount; i++) {
-            mFunctions[i](mObjs[i], args...);
+        for (size_t i = 0; i < mFunctions.size(); i++) {
+            if (mFunctions[i].first == id)
+                mFunctions.erase(mFunctions.begin() + i);
+            return;
         }
     }
 
 private:
-    static const int maxcount_ = 20;
-    int mCount = 0;
-    int mIdCount = 0;
-    T mFunctions[maxcount_] = { 0 };
-    int mIds[maxcount_] = { 0 };
-    void* mObjs[maxcount_] = { 0 };
+    std::vector<std::pair<int, std::function<T>>> mFunctions;
+    int id = 0;
+
+    friend class Window;
 };
 
 }

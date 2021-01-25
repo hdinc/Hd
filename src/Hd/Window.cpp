@@ -3,9 +3,10 @@
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <thread>
+#include <imgui.h>
 
 #include <Hd/Window.h>
-#include <imgui.h>
+#include <Hd/WindowCallbacks.h>
 
 static void glfw_error_callback(int error, const char* description);
 static void GLAPIENTRY messagecallback(
@@ -17,34 +18,16 @@ namespace Hd {
 
 Window* gWindow;
 
-// TODO: make callbacks member of window instead of reference
-static Callback<void (*)(void*, double, double), double, double> gCursorPosCb;
-static Callback<void (*)(void*, double, double), double, double> gScrollCb;
-static Callback<void (*)(void*, int, int, int, int), int, int, int, int> gKeyCb;
-static Callback<void (*)(void*, int, int, int), int, int, int> gMouseButtonCb;
-static Callback<void (*)(void*, int, int), int, int> gFramebufferSizeCb;
-
 const char* Hd::Window::mName = "Window";
 int Hd::Window::mSize[2] = { 1000, 1000 };
 
-void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-
 Window& Window::getInstance()
 {
-    static Window window(mName, mSize[0], mSize[1]);
+    static Window window;
     return window;
 }
 
-Window::Window(const char* name, int width, int height)
-    : CursorPosCb(gCursorPosCb)
-    , ScrollCb(gScrollCb)
-    , KeyCb(gKeyCb)
-    , MouseButtonCb(gMouseButtonCb)
-    , FramebufferSizeCb(gFramebufferSizeCb)
+Window::Window()
 {
 
 #ifndef NDEBUG
@@ -61,7 +44,7 @@ Window::Window(const char* name, int width, int height)
     puts("OPENGL DEBUG CONTEXT = ON");
 #endif
 
-    mWindowId = glfwCreateWindow(width, height, name, NULL, NULL);
+    mWindowId = glfwCreateWindow(mSize[0], mSize[1], mName, NULL, NULL);
 
     glfwSetCursorPosCallback(mWindowId, cursor_position_callback);
     glfwSetKeyCallback(mWindowId, key_callback);
@@ -166,7 +149,7 @@ int Window::getFps()
     return fps;
 }
 
-void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+void Window::cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
     (void)window;
 
@@ -176,10 +159,11 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
     r.y = -r.y;
     gWindow->mMousePos = glm::vec2(2) * (r - glm::vec2(0.5, -0.5));
 
-    gCursorPosCb.run(xpos, ypos);
+    for (auto f : gWindow->CursorPosCb.mFunctions)
+        f.second(xpos, ypos);
 }
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void Window::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     (void)window;
 
@@ -187,10 +171,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         if (ImGui::IsAnyWindowHovered())
             return;
 
-    gKeyCb.run(key, scancode, action, mods);
+    for (auto f : gWindow->KeyCb.mFunctions)
+        f.second(key, scancode, action, mods);
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+void Window::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     (void)window;
 
@@ -198,10 +183,11 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         if (ImGui::IsAnyWindowHovered())
             return;
 
-    gMouseButtonCb.run(button, action, mods);
+    for (auto f : gWindow->MouseButtonCb.mFunctions)
+        f.second(button, action, mods);
 }
 
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+void Window::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     (void)window;
 
@@ -209,16 +195,19 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
         if (ImGui::IsAnyWindowHovered())
             return;
 
-    gScrollCb.run(xoffset, yoffset);
+    for (auto f : gWindow->ScrollCb.mFunctions)
+        f.second(xoffset, yoffset);
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     (void)window;
 
-    gFramebufferSizeCb.run(width, height);
     gWindow->mFramebufferSize = glm::vec2(width, height);
     glViewport(0, 0, width, height);
+
+    for (auto f : gWindow->FramebufferSizeCb.mFunctions)
+        f.second(width, height);
 }
 
 }
