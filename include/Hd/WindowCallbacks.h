@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <functional>
 #include <vector>
+#include <algorithm>
 
 namespace Hd {
 
@@ -19,11 +20,13 @@ public:
 
     void remove(int id)
     {
-        for (size_t i = 0; i < mFunctions.size(); i++) {
-            if (mFunctions[i].first == id)
-                mFunctions.erase(mFunctions.begin() + i);
-            return;
-        }
+        auto it = std::find_if(mFunctions.begin(), mFunctions.end(),
+            [id](const decltype(mFunctions[0])& i) { return i.first == id; });
+
+        if (it != mFunctions.end())
+            mFunctions.erase(it);
+        else
+            printf("[WINDOW]: wrong callback id\n");
     }
 
 private:
