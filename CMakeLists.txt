@@ -8,8 +8,10 @@ add_subdirectory(deps/glad)
 add_subdirectory(deps/imgui)
 add_subdirectory(deps/stb)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_options(-Wall -Wextra -Wpedantic)
+if(MSVC)
+  add_compile_options(/W4)
+else()
+  add_compile_options(-Wall -Wextra -pedantic)
 endif()
 
 set(SRC
