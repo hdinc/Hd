@@ -122,24 +122,8 @@ public:
 class orbit : public line {
 };
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void mouse_button_callback(
-    GLFWwindow* window, int button, int action, int mods);
-
-glm::vec2 get_viewportcoord();
-
-float camera_zoom = 1.0 / 6371;
-glm::vec2 camera_loc(0);
-
-glm::mat4 view(1);
-glm::mat4 projection(1);
-
-glm::vec2 viewport_size(0);
-GLFWwindow* w = 0;
-
-bool drag = false;
-glm::vec2 drag_start(0);
+Hd::Window* gwindow;
+Hd::Camera2D* gcam;
 
 const int path_size = 5000000;
 const double delta_t = 10;
@@ -149,10 +133,11 @@ const double Mm = 7.348e22;
 const double moon_w = 2.42407e-6;
 
 glm::tvec2<double, glm::highp> path[2][path_size];
-glm::vec2 path_draw[path_size];
 glm::tvec2<double, glm::highp> init_loc(-6500, 0);
 glm::tvec2<double, glm::highp> init_vel(0, 260);
 glm::tvec2<double, glm::highp> moon_last(384400, 0);
+glm::vec2 path_draw[path_size];
+
 float path_draw_time;
 float last_calculate_time;
 
@@ -193,14 +178,16 @@ void calculate_path()
 int main()
 {
 
-    view = glm::scale(view, glm::vec3(camera_zoom));
-    view = glm::translate(view, glm::vec3(camera_loc, 0.0f));
-
     Hd::Window::setSize(1000, 1000);
     Hd::Window::setName("orbit");
     auto& window = Hd::Window::getInstance();
+    gwindow = &window;
 
-    w = window.Id();
+    Hd::Camera2D cam;
+    gcam = &cam;
+    cam.zoom(1e-4);
+    cam.setupInput();
+
     Hd::Gui gui;
     gui.addFunc(guifunc);
 
@@ -221,16 +208,12 @@ int main()
         MVP = glGetUniformLocation(circle_shader.Id(), "MVP");
     }
 
-    glfwSetFramebufferSizeCallback(w, framebuffer_size_callback);
-    glfwSetScrollCallback(w, scroll_callback);
-    glfwSetMouseButtonCallback(w, mouse_button_callback);
-
-    circle::init_gldata(&circle_shader, &view, &projection);
+    circle::init_gldata(&circle_shader, cam.getView(), cam.getProjection());
 
     circle earth(6371, glm::vec2(0, 0));
     circle moon(1737, glm::vec2(384400, 0));
 
-    line l(&view, &projection);
+    line l(cam.getView(), cam.getProjection());
 
     calculate_path();
 
@@ -252,23 +235,14 @@ int main()
             // l.draw(&path_draw[0], path_size);
 
             glBindVertexArray(vao);
-            glm::mat4 mvp(1);
-            mvp = projection * view;
             circle_shader.Bind();
-            glUniformMatrix4fv(MVP, 1, 0, glm::value_ptr(mvp));
+            glUniformMatrix4fv(MVP, 1, 0, glm::value_ptr(*cam.getVP()));
             glUniform3f(COLOR, .3, 5, .1);
             glDrawArrays(GL_LINE_STRIP, 0, path_size);
             glFinish();
             path_draw_time = glfwGetTime() - path_draw_time;
         }
 
-        if (drag) {
-            auto a = get_viewportcoord() - drag_start;
-            a.y /= viewport_size.x / viewport_size.y;
-            a /= camera_zoom;
-            view = glm::scale(glm::mat4(1), glm::vec3(camera_zoom));
-            view = glm::translate(view, glm::vec3(a - camera_loc, 0.0));
-        }
         gui.Draw();
         window.SwapBuffers();
     }
@@ -284,10 +258,12 @@ void guifunc()
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
         1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
-    auto a = get_viewportcoord();
-    a.y /= viewport_size.x / viewport_size.y;
-    a /= camera_zoom;
-    ImGui::Text("distance: %f, %f", (camera_loc + a).x, (camera_loc + a).y);
+    // TODO: camera2d getmouseloc function
+    auto a = gwindow->getMousePos();
+    a /= gwindow->getFramebufferScale();
+    a /= gcam->getZoom();
+
+    ImGui::Text("distance: %f, %f", (gcam->getLoc() + a).x, (gcam->getLoc() + a).y);
 
     ImGui::Text("path_draw_time = %f\nlast_calculate_time = %f\n",
         path_draw_time, last_calculate_time);
@@ -305,62 +281,4 @@ void guifunc()
     }
 
     ImGui::End();
-}
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    (void)window;
-    glViewport(0, 0, width, height);
-    viewport_size.x = width;
-    viewport_size.y = height;
-
-    projection
-        = glm::scale(glm::mat4(1), glm::vec3(1, (float)width / height, 1));
-}
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    (void)window;
-    (void)xoffset;
-
-    if (drag)
-        return;
-
-    if (yoffset > 0)
-        camera_zoom *= .75;
-    else
-        camera_zoom /= .75;
-
-    view = glm::scale(glm::mat4(1), glm::vec3(camera_zoom));
-    view = glm::translate(view, glm::vec3(-camera_loc, 0.0f));
-}
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-    (void)window;
-    (void)mods;
-
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-        drag = true;
-        drag_start = get_viewportcoord();
-    }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
-        drag = false;
-
-        auto a = get_viewportcoord() - drag_start;
-        a.y /= viewport_size.x / viewport_size.y;
-        a /= camera_zoom;
-        camera_loc -= a;
-    }
-}
-
-glm::vec2 get_viewportcoord()
-{
-    double x, y;
-    glfwGetCursorPos(w, &x, &y);
-    glm::vec2 screencoord(x, y);
-
-    auto r = screencoord / viewport_size;
-    r.y = -r.y;
-    return glm::vec2(2) * (r - glm::vec2(0.5, -0.5));
 }

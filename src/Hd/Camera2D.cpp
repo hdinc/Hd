@@ -82,8 +82,8 @@ void Camera2D::onMouseButtonClick(int button, int action, int mods)
         a /= mProjectionScale;
         a /= mZoom;
         mLoc -= a;
+        updateData();
     }
-    updateData();
 }
 
 void Camera2D::setupInput()
