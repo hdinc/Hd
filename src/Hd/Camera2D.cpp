@@ -16,6 +16,9 @@ Camera2D::Camera2D()
     , mLoc(0)
     , mZoom(1)
 {
+    int x, y;
+    glfwGetFramebufferSize(gWindow->Id(), &x, &y);
+    onFramebufferSizeChange(x, y);
 }
 
 Camera2D::~Camera2D()
