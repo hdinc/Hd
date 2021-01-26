@@ -28,6 +28,7 @@ Window& Window::getInstance()
 }
 
 Window::Window()
+    : mFramebufferSize(mSize[0], mSize[1])
 {
 
 #ifndef NDEBUG
@@ -66,13 +67,6 @@ Window::Window()
     glfwSwapInterval(mVsync ? 1 : 0);
 
     gWindow = this;
-
-    double dx, dy;
-    int ix, iy;
-    glfwGetCursorPos(mWindowId, &dx, &dy);
-    glfwGetFramebufferSize(mWindowId, &ix, &iy);
-    cursor_position_callback(mWindowId, dx, dy);
-    framebuffer_size_callback(mWindowId, ix, iy);
 }
 
 Window::~Window()
