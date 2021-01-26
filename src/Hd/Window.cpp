@@ -28,7 +28,6 @@ Window& Window::getInstance()
 }
 
 Window::Window()
-    : mFramebufferSize(mSize[0], mSize[1])
 {
 
 #ifndef NDEBUG
@@ -67,6 +66,8 @@ Window::Window()
     glfwSwapInterval(mVsync ? 1 : 0);
 
     gWindow = this;
+
+    framebuffer_size_callback(gWindow->Id(), mSize[0], mSize[1]);
 }
 
 Window::~Window()
@@ -112,6 +113,7 @@ void Window::VSync(bool b)
 
 void Window::waitFpsLimit()
 {
+    // TODO: this doesnt work on windows. find a better way to limit fps;
     static double oldtime = 0;
     double t;
     t = glfwGetTime() - oldtime - 1.0 / (double)mFpsLimit;
@@ -198,6 +200,10 @@ void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height
     (void)window;
 
     gWindow->mFramebufferSize = glm::vec2(width, height);
+    gWindow->mFramebufferScale = (width > height)
+        ? glm::vec2((float)height / width, 1)
+        : glm::vec2(1, (float)width / height);
+
     glViewport(0, 0, width, height);
 
     for (auto f : gWindow->FramebufferSizeCb.mFunctions)
