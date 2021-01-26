@@ -16,9 +16,8 @@ Camera2D::Camera2D()
     , mLoc(0)
     , mZoom(1)
 {
-    int x, y;
-    glfwGetFramebufferSize(gWindow->Id(), &x, &y);
-    onFramebufferSizeChange(x, y);
+    auto s = gWindow->getFramebufferSize();
+    onFramebufferSizeChange(s.x, s.y);
 }
 
 Camera2D::~Camera2D()
@@ -38,15 +37,17 @@ void Camera2D::onScroll(double dx, double dy)
     if (mDrag)
         return;
 
-    float z = getZoom();
-    z *= (dy > 0) ? 1.1 : 1 / 1.1;
-    zoom(z);
+    mZoom *= (dy > 0) ? 1.1 : 1 / 1.1;
+    updateData();
 }
 
 void Camera2D::onFramebufferSizeChange(int x, int y)
 {
-    mFramebufferScale = (x > y) ? glm::vec2((float)y / x, 1) : glm::vec2(1, (float)x / y);
-    mProjection = glm::scale(glm::mat4(1), glm::vec3(mFramebufferScale, 1));
+    (void)x;
+    (void)y;
+
+    mProjectionScale = gWindow->getFramebufferScale();
+    mProjection = glm::scale(glm::mat4(1), glm::vec3(mProjectionScale, 1));
     mVP = mProjection * mView;
 }
 
@@ -58,7 +59,7 @@ void Camera2D::onMouseMovement(double x, double y)
     if (mDrag) {
         auto a = gWindow->getMousePos() - mDragStart;
 
-        a /= mFramebufferScale;
+        a /= mProjectionScale;
         a /= mZoom;
         mView = glm::scale(glm::mat4(1), glm::vec3(mZoom));
         mView = glm::translate(mView, glm::vec3(a - mLoc, 0.0));
@@ -78,7 +79,7 @@ void Camera2D::onMouseButtonClick(int button, int action, int mods)
         mDrag = false;
 
         auto a = gWindow->getMousePos() - mDragStart;
-        a /= mFramebufferScale;
+        a /= mProjectionScale;
         a /= mZoom;
         mLoc -= a;
     }

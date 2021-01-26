@@ -27,6 +27,7 @@ public:
     bool ShouldClose();
     int getFps();
     glm::vec2 getFramebufferSize();
+    glm::vec2 getFramebufferScale();
     glm::vec2 getMousePos();
 
     Callback<void(double, double)> CursorPosCb;
@@ -45,6 +46,7 @@ private:
     int mFpsLimit = 60;
     int mFrame = 0;
     glm::vec2 mFramebufferSize;
+    glm::vec2 mFramebufferScale;
     glm::vec2 mMousePos;
 
     static const char* mName;
@@ -94,6 +96,11 @@ inline void Window::WaitEvents()
 inline glm::vec2 Window::getFramebufferSize()
 {
     return mFramebufferSize;
+}
+
+inline glm::vec2 Window::getFramebufferScale()
+{
+    return mFramebufferScale;
 }
 
 inline glm::vec2 Window::getMousePos()
