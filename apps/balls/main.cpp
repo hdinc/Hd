@@ -30,7 +30,7 @@ int main()
     Hd::Window::setSize(1280, 720);
     Hd::Window::setName("balls");
     auto& window = Hd::Window::getInstance();
-    Hd::Camera2D cam;
+    Hd::Camera cam;
 
     window.fpsLimit(60);
 

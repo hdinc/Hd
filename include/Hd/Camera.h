@@ -5,11 +5,11 @@
 
 namespace Hd {
 
-class Camera2D {
+class Camera {
 
 public:
-    Camera2D();
-    ~Camera2D();
+    Camera();
+    ~Camera();
 
     void lookAt(glm::vec2 l, float zoom);
     void move(glm::vec2 d);
@@ -45,26 +45,26 @@ private:
     void onMouseButtonClick(int button, int action, int mods);
 };
 
-inline void Camera2D::zoom(float zoom)
+inline void Camera::zoom(float zoom)
 {
     mZoom = zoom;
     updateData();
 }
 
-inline void Camera2D::move(glm::vec2 d)
+inline void Camera::move(glm::vec2 d)
 {
     mLoc += d;
     updateData();
 }
 
-inline void Camera2D::lookAt(glm::vec2 l, float zoom)
+inline void Camera::lookAt(glm::vec2 l, float zoom)
 {
     mLoc = l;
     mZoom = zoom;
     updateData();
 }
 
-inline void Camera2D::updateData()
+inline void Camera::updateData()
 {
     mView = glm::mat4(1);
     mView = glm::scale(mView, glm::vec3(mZoom, mZoom, 1));
@@ -72,10 +72,10 @@ inline void Camera2D::updateData()
     mVP = mProjection * mView;
 }
 
-inline glm::mat4* Camera2D::getView() { return &mView; }
-inline glm::mat4* Camera2D::getProjection() { return &mProjection; }
-inline glm::mat4* Camera2D::getVP() { return &mVP; }
-inline glm::vec2 Camera2D::getLoc() { return mLoc; }
-inline float Camera2D::getZoom() { return mZoom; }
+inline glm::mat4* Camera::getView() { return &mView; }
+inline glm::mat4* Camera::getProjection() { return &mProjection; }
+inline glm::mat4* Camera::getVP() { return &mVP; }
+inline glm::vec2 Camera::getLoc() { return mLoc; }
+inline float Camera::getZoom() { return mZoom; }
 
 }
