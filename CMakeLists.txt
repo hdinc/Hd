@@ -20,7 +20,7 @@ set(SRC
     src/Hd/Texture.cpp
     src/Hd/Gui.cpp
     src/Hd/FrameBuffer.cpp
-    src/Hd/Camera2D.cpp
+    src/Hd/Camera.cpp
 )
 
 add_library(Hd ${SRC})

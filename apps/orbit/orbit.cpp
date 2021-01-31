@@ -123,7 +123,7 @@ class orbit : public line {
 };
 
 Hd::Window* gwindow;
-Hd::Camera2D* gcam;
+Hd::Camera* gcam;
 
 const int path_size = 5000000;
 const double delta_t = 10;
@@ -183,7 +183,7 @@ int main()
     auto& window = Hd::Window::getInstance();
     gwindow = &window;
 
-    Hd::Camera2D cam;
+    Hd::Camera cam;
     gcam = &cam;
     cam.zoom(1e-4);
     cam.setupInput();

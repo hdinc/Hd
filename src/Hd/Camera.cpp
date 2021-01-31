@@ -1,4 +1,4 @@
-#include <Hd/Camera2D.h>
+#include <Hd/Camera.h>
 #include <Hd/Window.h>
 
 #include <glm/glm.hpp>
@@ -10,7 +10,7 @@ namespace Hd {
 
 extern Window* gWindow;
 
-Camera2D::Camera2D()
+Camera::Camera()
     : mView(1)
     , mProjection(1)
     , mLoc(0)
@@ -20,7 +20,7 @@ Camera2D::Camera2D()
     onFramebufferSizeChange(s.x, s.y);
 }
 
-Camera2D::~Camera2D()
+Camera::~Camera()
 {
     if (inputSUp) {
         gWindow->ScrollCb.remove(ids[0]);
@@ -30,7 +30,7 @@ Camera2D::~Camera2D()
     }
 }
 
-void Camera2D::onScroll(double dx, double dy)
+void Camera::onScroll(double dx, double dy)
 {
     (void)dx;
 
@@ -41,7 +41,7 @@ void Camera2D::onScroll(double dx, double dy)
     updateData();
 }
 
-void Camera2D::onFramebufferSizeChange(int x, int y)
+void Camera::onFramebufferSizeChange(int x, int y)
 {
     (void)x;
     (void)y;
@@ -51,7 +51,7 @@ void Camera2D::onFramebufferSizeChange(int x, int y)
     mVP = mProjection * mView;
 }
 
-void Camera2D::onMouseMovement(double x, double y)
+void Camera::onMouseMovement(double x, double y)
 {
     (void)x;
     (void)y;
@@ -67,7 +67,7 @@ void Camera2D::onMouseMovement(double x, double y)
     mVP = mProjection * mView;
 }
 
-void Camera2D::onMouseButtonClick(int button, int action, int mods)
+void Camera::onMouseButtonClick(int button, int action, int mods)
 {
     (void)mods;
 
@@ -86,15 +86,15 @@ void Camera2D::onMouseButtonClick(int button, int action, int mods)
     }
 }
 
-void Camera2D::setupInput()
+void Camera::setupInput()
 {
     inputSUp = true;
 
     using namespace std::placeholders;
-    auto f1 = std::bind(&Camera2D::onScroll, this, _1, _2);
-    auto f2 = std::bind(&Camera2D::onFramebufferSizeChange, this, _1, _2);
-    auto f3 = std::bind(&Camera2D::onMouseMovement, this, _1, _2);
-    auto f4 = std::bind(&Camera2D::onMouseButtonClick, this, _1, _2, _3);
+    auto f1 = std::bind(&Camera::onScroll, this, _1, _2);
+    auto f2 = std::bind(&Camera::onFramebufferSizeChange, this, _1, _2);
+    auto f3 = std::bind(&Camera::onMouseMovement, this, _1, _2);
+    auto f4 = std::bind(&Camera::onMouseButtonClick, this, _1, _2, _3);
 
     ids[0] = gWindow->ScrollCb.add(f1);
     ids[1] = gWindow->FramebufferSizeCb.add(f2);
