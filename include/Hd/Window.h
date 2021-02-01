@@ -3,7 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#include <Hd/WindowCallbacks.h>
+#include <Hd/FunctionList.h>
 
 namespace Hd {
 
@@ -30,11 +30,11 @@ public:
     glm::vec2 getFramebufferScale();
     glm::vec2 getMousePos();
 
-    Callback<void(double, double)> CursorPosCb;
-    Callback<void(double, double)> ScrollCb;
-    Callback<void(int, int, int, int)> KeyCb;
-    Callback<void(int, int, int)> MouseButtonCb;
-    Callback<void(int, int)> FramebufferSizeCb;
+    FunctionList<void, double, double> CursorPosCb;
+    FunctionList<void, double, double> ScrollCb;
+    FunctionList<void, int, int, int, int> KeyCb;
+    FunctionList<void, int, int, int> MouseButtonCb;
+    FunctionList<void, int, int> FramebufferSizeCb;
 
 private:
     Window();
@@ -103,6 +103,8 @@ inline glm::vec2 Window::getFramebufferScale()
     return mFramebufferScale;
 }
 
+// returns normalized coordinates of mouse position.
+// (0,0) at center;
 inline glm::vec2 Window::getMousePos()
 {
     return mMousePos;
