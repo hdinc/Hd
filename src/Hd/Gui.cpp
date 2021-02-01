@@ -37,31 +37,6 @@ Gui::~Gui()
     Window::getInstance().hasGui = false;
 }
 
-int Gui::addFunc(guifunc function)
-{
-    if (mCount >= maxcount_) {
-        printf("[GUI]:max guifunc count exceeded\n");
-        return -1;
-    }
-    mFunctions[mCount] = function;
-    mIds[mCount] = ++mIdCount;
-    mCount++;
-    return mIdCount;
-}
-
-void Gui::removeFunc(int n)
-{
-    for (int i = 0; i < mCount; i++) {
-        if (mIds[i] == n) {
-            mFunctions[i] = mFunctions[mCount];
-            mIds[i] = mIds[mCount];
-            mCount--;
-            return;
-        }
-    }
-    printf("[GUI]:invalid guifunc id\n");
-}
-
 void Gui::Draw()
 {
 
@@ -69,9 +44,7 @@ void Gui::Draw()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    for (int i = 0; i < mCount; i++) {
-        mFunctions[i]();
-    }
+    Functions.run();
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

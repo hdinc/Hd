@@ -6,7 +6,7 @@
 #include <imgui.h>
 
 #include <Hd/Window.h>
-#include <Hd/WindowCallbacks.h>
+#include <Hd/FunctionList.h>
 
 static void glfw_error_callback(int error, const char* description);
 static void GLAPIENTRY messagecallback(
@@ -155,8 +155,7 @@ void Window::cursor_position_callback(GLFWwindow* window, double xpos, double yp
     r.y = -r.y;
     gWindow->mMousePos = glm::vec2(2) * (r - glm::vec2(0.5, -0.5));
 
-    for (auto f : gWindow->CursorPosCb.mFunctions)
-        f.second(xpos, ypos);
+    gWindow->CursorPosCb.run(xpos, ypos);
 }
 
 void Window::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -167,8 +166,7 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
         if (ImGui::IsAnyWindowHovered())
             return;
 
-    for (auto f : gWindow->KeyCb.mFunctions)
-        f.second(key, scancode, action, mods);
+    gWindow->KeyCb.run(key, scancode, action, mods);
 }
 
 void Window::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
@@ -179,8 +177,7 @@ void Window::mouse_button_callback(GLFWwindow* window, int button, int action, i
         if (ImGui::IsAnyWindowHovered())
             return;
 
-    for (auto f : gWindow->MouseButtonCb.mFunctions)
-        f.second(button, action, mods);
+    gWindow->MouseButtonCb.run(button, action, mods);
 }
 
 void Window::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
@@ -191,8 +188,7 @@ void Window::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
         if (ImGui::IsAnyWindowHovered())
             return;
 
-    for (auto f : gWindow->ScrollCb.mFunctions)
-        f.second(xoffset, yoffset);
+    gWindow->ScrollCb.run(xoffset, yoffset);
 }
 
 void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -206,8 +202,7 @@ void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height
 
     glViewport(0, 0, width, height);
 
-    for (auto f : gWindow->FramebufferSizeCb.mFunctions)
-        f.second(width, height);
+    gWindow->FramebufferSizeCb.run(width, height);
 }
 
 }
