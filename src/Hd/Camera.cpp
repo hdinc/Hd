@@ -11,22 +11,21 @@ namespace Hd {
 extern Window* gWindow;
 
 Camera::Camera()
-    : mView(1)
-    , mProjection(1)
-    , mLoc(0)
-    , mZoom(1)
 {
     auto s = gWindow->getFramebufferSize();
     onFramebufferSizeChange(s.x, s.y);
+
+    if (mProjectionType == projectionType::perspective) {
+        setPerspective(mPerspectiveFOV);
+    } else {
+        setOrthographic();
+    }
 }
 
 Camera::~Camera()
 {
-    if (inputSUp) {
-        gWindow->ScrollCb.remove(ids[0]);
-        gWindow->FramebufferSizeCb.remove(ids[1]);
-        gWindow->CursorPosCb.remove(ids[2]);
-        gWindow->MouseButtonCb.remove(ids[3]);
+    if (inputEnabled) {
+        disableInput();
     }
 }
 
@@ -37,8 +36,9 @@ void Camera::onScroll(double dx, double dy)
     if (mDrag)
         return;
 
-    mZoom *= (dy > 0) ? 1.1 : 1 / 1.1;
-    updateData();
+    glm::vec3 v = mLoc - mTarget;
+
+    move(-v * (float)dy / 10.0f);
 }
 
 void Camera::onFramebufferSizeChange(int x, int y)
@@ -47,8 +47,12 @@ void Camera::onFramebufferSizeChange(int x, int y)
     (void)y;
 
     mProjectionScale = gWindow->getFramebufferScale();
-    mProjection = glm::scale(glm::mat4(1), glm::vec3(mProjectionScale, 1));
-    mVP = mProjection * mView;
+    if (mProjectionType == projectionType::perspective) {
+        setPerspective(mPerspectiveFOV);
+    } else {
+        setOrthographic();
+    }
+    calculateVP();
 }
 
 void Camera::onMouseMovement(double x, double y)
@@ -59,12 +63,13 @@ void Camera::onMouseMovement(double x, double y)
     if (mDrag) {
         auto a = gWindow->getMousePos() - mDragStart;
 
+        // broken
         a /= mProjectionScale;
-        a /= mZoom;
-        mView = glm::scale(glm::mat4(1), glm::vec3(mZoom));
-        mView = glm::translate(mView, glm::vec3(a - mLoc, 0.0));
+        glm::vec3 rotateAxis = glm::normalize(glm::cross(mTarget - mLoc, glm::vec3(a, 0.0f)));
+        glm::vec3 nloc = glm::rotate(glm::mat4(1), glm::length(a), rotateAxis) * glm::vec4(mLoc, 1.0f);
+        mView = glm::lookAt(nloc, mTarget, glm::vec3(0.0f, 1.0f, 0.0f));
+        mVP = mProjection * mView;
     }
-    mVP = mProjection * mView;
 }
 
 void Camera::onMouseButtonClick(int button, int action, int mods)
@@ -78,17 +83,19 @@ void Camera::onMouseButtonClick(int button, int action, int mods)
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE && mDrag == true) {
         mDrag = false;
 
+        // broken
         auto a = gWindow->getMousePos() - mDragStart;
         a /= mProjectionScale;
-        a /= mZoom;
-        mLoc -= a;
-        updateData();
+        glm::vec3 rotateAxis = glm::normalize(glm::cross(mTarget - mLoc, glm::vec3(a, 0.0f)));
+        mLoc = glm::rotate(glm::mat4(1), glm::length(a), rotateAxis) * glm::vec4(mLoc, 1.0f);
+        calculateView();
+        calculateVP();
     }
 }
 
-void Camera::setupInput()
+void Camera::enableInput()
 {
-    inputSUp = true;
+    inputEnabled = true;
 
     using namespace std::placeholders;
     auto f1 = std::bind(&Camera::onScroll, this, _1, _2);
@@ -100,6 +107,15 @@ void Camera::setupInput()
     ids[1] = gWindow->FramebufferSizeCb.add(f2);
     ids[2] = gWindow->CursorPosCb.add(f3);
     ids[3] = gWindow->MouseButtonCb.add(f4);
+}
+
+void Camera::disableInput()
+{
+    inputEnabled = false;
+    gWindow->ScrollCb.remove(ids[0]);
+    gWindow->FramebufferSizeCb.remove(ids[1]);
+    gWindow->CursorPosCb.remove(ids[2]);
+    gWindow->MouseButtonCb.remove(ids[3]);
 }
 
 }

@@ -8,74 +8,101 @@ namespace Hd {
 class Camera {
 
 public:
+    enum class projectionType {
+        perspective,
+        orthographic
+    };
+
+public:
     Camera();
     ~Camera();
 
-    void lookAt(glm::vec2 l, float zoom);
-    void move(glm::vec2 d);
-    void zoom(float zoom);
+    void setPerspective(float fov);
+    void setOrthographic();
+
+    void setLoc(glm::vec3 loc);
+    void move(glm::vec3 dloc);
 
     glm::mat4* getView();
     glm::mat4* getProjection();
     glm::mat4* getVP();
-    glm::vec2 getLoc();
-    float getZoom();
+    glm::vec3 getLoc();
 
-    void setupInput();
+    void enableInput();
+    void disableInput();
 
 private:
     glm::mat4 mView;
     glm::mat4 mProjection;
     glm::mat4 mVP;
-    glm::vec2 mLoc;
-    glm::vec2 mBorder;
+    glm::vec3 mLoc = glm::vec3(0, 1, 1);
+    glm::vec3 mTarget = glm::vec3(0);
     glm::vec2 mProjectionScale;
-    float mZoom;
+
+    float mPerspectiveFOV = glm::radians(45.0f);
+
+    projectionType mProjectionType = projectionType::perspective;
 
     bool mDrag = false;
     glm::vec2 mDragStart;
 
-    void updateData();
+    void calculateView();
+    void calculateVP();
 
-    bool inputSUp = false;
+    bool inputEnabled = false;
     int ids[4] = { 0 };
+
     void onScroll(double dx, double dy);
     void onFramebufferSizeChange(int x, int y);
     void onMouseMovement(double x, double y);
     void onMouseButtonClick(int button, int action, int mods);
 };
 
-inline void Camera::zoom(float zoom)
+inline void Camera::setOrthographic()
 {
-    mZoom = zoom;
-    updateData();
+    mProjectionType = projectionType::orthographic;
+
+    glm::vec2 v = 1.0f / mProjectionScale;
+    mProjection = glm::ortho(-v.x, v.x, -v.y, v.y, -1000.f, 1000.f);
+    calculateVP();
 }
 
-inline void Camera::move(glm::vec2 d)
+inline void Camera::setPerspective(float fov)
 {
-    mLoc += d;
-    updateData();
+    mProjectionType = projectionType::perspective;
+    mPerspectiveFOV = fov;
+    float aspect = mProjectionScale.y / mProjectionScale.x;
+    mProjection = glm::perspective(fov, aspect, 0.01f, 10000.0f);
+    calculateVP();
 }
 
-inline void Camera::lookAt(glm::vec2 l, float zoom)
+inline void Camera::setLoc(glm::vec3 loc)
 {
-    mLoc = l;
-    mZoom = zoom;
-    updateData();
+    mLoc = loc;
+    calculateView();
+    calculateVP();
 }
 
-inline void Camera::updateData()
+inline void Camera::move(glm::vec3 dloc)
 {
-    mView = glm::mat4(1);
-    mView = glm::scale(mView, glm::vec3(mZoom, mZoom, 1));
-    mView = glm::translate(mView, glm::vec3(-mLoc, 0));
+    mLoc += dloc;
+    calculateView();
+    calculateVP();
+}
+
+inline void Camera::calculateView()
+{
+    mView = glm::lookAt(mLoc, mTarget, glm::vec3(0.0f, 1.0f, 0.0f));
+}
+
+inline void Camera::calculateVP()
+{
     mVP = mProjection * mView;
 }
 
 inline glm::mat4* Camera::getView() { return &mView; }
 inline glm::mat4* Camera::getProjection() { return &mProjection; }
 inline glm::mat4* Camera::getVP() { return &mVP; }
-inline glm::vec2 Camera::getLoc() { return mLoc; }
-inline float Camera::getZoom() { return mZoom; }
+inline glm::vec3 Camera::getLoc() { return mLoc; }
 
 }
