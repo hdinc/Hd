@@ -15,6 +15,10 @@ Camera::Camera()
     auto s = gWindow->getFramebufferSize();
     onFramebufferSizeChange(s.x, s.y);
 
+    using namespace std::placeholders;
+    auto f = std::bind(&Camera::onFramebufferSizeChange, this, _1, _2);
+    ids[1] = gWindow->FramebufferSizeCb.add(f);
+
     if (mProjectionType == projectionType::perspective) {
         setPerspective(mPerspectiveFOV);
     } else {
@@ -27,6 +31,7 @@ Camera::~Camera()
     if (inputEnabled) {
         disableInput();
     }
+    gWindow->FramebufferSizeCb.remove(ids[0]);
 }
 
 void Camera::onScroll(double dx, double dy)
@@ -99,21 +104,18 @@ void Camera::enableInput()
 
     using namespace std::placeholders;
     auto f1 = std::bind(&Camera::onScroll, this, _1, _2);
-    auto f2 = std::bind(&Camera::onFramebufferSizeChange, this, _1, _2);
-    auto f3 = std::bind(&Camera::onMouseMovement, this, _1, _2);
-    auto f4 = std::bind(&Camera::onMouseButtonClick, this, _1, _2, _3);
+    auto f2 = std::bind(&Camera::onMouseMovement, this, _1, _2);
+    auto f3 = std::bind(&Camera::onMouseButtonClick, this, _1, _2, _3);
 
-    ids[0] = gWindow->ScrollCb.add(f1);
-    ids[1] = gWindow->FramebufferSizeCb.add(f2);
-    ids[2] = gWindow->CursorPosCb.add(f3);
-    ids[3] = gWindow->MouseButtonCb.add(f4);
+    ids[1] = gWindow->ScrollCb.add(f1);
+    ids[2] = gWindow->CursorPosCb.add(f2);
+    ids[3] = gWindow->MouseButtonCb.add(f3);
 }
 
 void Camera::disableInput()
 {
     inputEnabled = false;
-    gWindow->ScrollCb.remove(ids[0]);
-    gWindow->FramebufferSizeCb.remove(ids[1]);
+    gWindow->ScrollCb.remove(ids[1]);
     gWindow->CursorPosCb.remove(ids[2]);
     gWindow->MouseButtonCb.remove(ids[3]);
 }
