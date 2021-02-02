@@ -3,7 +3,7 @@
 in vec2 texcoord;
 out vec4 fragcolor;
 
-uniform sampler2D tex;
+layout(location = 1) uniform sampler2D tex;
 
 void main()
 {

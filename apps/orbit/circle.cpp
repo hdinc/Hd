@@ -20,8 +20,8 @@ void circle::init_gldata(Hd::Shader* s, glm::mat4* v, glm::mat4* p)
     viewport = v;
     projection = p;
 
-    MVP = glGetUniformLocation(shader->Id(), "MVP");
-    COLOR = glGetUniformLocation(shader->Id(), "COLOR");
+    MVP = glGetUniformLocation(shader->Id(), "u_mvp");
+    COLOR = glGetUniformLocation(shader->Id(), "u_color");
     shader->Bind();
     glUniform3f(COLOR, 1, 1, 1);
 
