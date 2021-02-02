@@ -3,6 +3,7 @@ add_subdirectory(mandelbrot)
 add_subdirectory(texture_test)
 add_subdirectory(balls)
 add_subdirectory(orbit)
+add_subdirectory(3dtest)
 
 execute_process(
     COMMAND ${CMAKE_COMMAND} -E create_symlink

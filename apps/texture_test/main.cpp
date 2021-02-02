@@ -20,7 +20,7 @@ int main()
         "../res/shaders/vertex.glsl", "../res/shaders/texture.glsl");
     Hd::Texture texture("../res/textures/diyojen.png");
     Hd::Gui gui;
-    gui.addFunc(guifunc);
+    gui.Functions.add(guifunc);
 
     glfwSetScrollCallback(window.Id(), scroll_callback);
 
@@ -40,13 +40,12 @@ int main()
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
-    texture.Bind(0);
+    texture.Bind(1);
 
     glClearColor(.0f, .0f, .0f, .0f);
     shader.Bind();
 
-    glUniform1i(glGetUniformLocation(shader.Id(), "tex"), 0);
-    GLint u_mvp = glGetUniformLocation(shader.Id(), "MVP");
+    GLint u_mvp = glGetUniformLocation(shader.Id(), "u_mvp");
 
     while (!window.ShouldClose()) {
 
