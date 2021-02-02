@@ -185,11 +185,12 @@ int main()
 
     Hd::Camera cam;
     gcam = &cam;
-    cam.zoom(1e-4);
-    cam.setupInput();
+    cam.enableInput();
+    cam.setOrthographic();
+    cam.setLoc(glm::vec3(0.0, 0, 10000));
 
     Hd::Gui gui;
-    gui.addFunc(guifunc);
+    gui.Functions.add(guifunc);
 
     Hd::Shader circle_shader(
         "../res/shaders/vertex.glsl", "../res/shaders/frag.glsl");
@@ -204,8 +205,8 @@ int main()
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
-        COLOR = glGetUniformLocation(circle_shader.Id(), "COLOR");
-        MVP = glGetUniformLocation(circle_shader.Id(), "MVP");
+        COLOR = glGetUniformLocation(circle_shader.Id(), "u_color");
+        MVP = glGetUniformLocation(circle_shader.Id(), "u_mvp");
     }
 
     circle::init_gldata(&circle_shader, cam.getView(), cam.getProjection());
@@ -259,11 +260,12 @@ void guifunc()
         1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
     // TODO: camera2d getmouseloc function
-    auto a = gwindow->getMousePos();
-    a /= gwindow->getFramebufferScale();
-    a /= gcam->getZoom();
 
-    ImGui::Text("distance: %f, %f", (gcam->getLoc() + a).x, (gcam->getLoc() + a).y);
+    /* auto a = gwindow->getMousePos(); */
+    /* a /= gwindow->getFramebufferScale(); */
+    /* a /= gcam->getZoom(); */
+
+    /* ImGui::Text("distance: %f, %f", (gcam->getLoc() + a).x, (gcam->getLoc() + a).y); */
 
     ImGui::Text("path_draw_time = %f\nlast_calculate_time = %f\n",
         path_draw_time, last_calculate_time);

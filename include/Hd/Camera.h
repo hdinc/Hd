@@ -60,10 +60,12 @@ private:
 
 inline void Camera::setOrthographic()
 {
+    // TODO: fix me
     mProjectionType = projectionType::orthographic;
 
     glm::vec2 v = 1.0f / mProjectionScale;
-    mProjection = glm::ortho(-v.x, v.x, -v.y, v.y, -1000.f, 1000.f);
+    auto d = glm::length(mLoc - mTarget);
+    mProjection = glm::ortho(-v.x * d, v.x * d, -v.y * d, v.y * d, -1000000.f, 1000000.f);
     calculateVP();
 }
 
@@ -72,7 +74,7 @@ inline void Camera::setPerspective(float fov)
     mProjectionType = projectionType::perspective;
     mPerspectiveFOV = fov;
     float aspect = mProjectionScale.y / mProjectionScale.x;
-    mProjection = glm::perspective(fov, aspect, 0.01f, 10000.0f);
+    mProjection = glm::perspective(fov, aspect, 0.01f, 100000.0f);
     calculateVP();
 }
 
@@ -88,6 +90,10 @@ inline void Camera::move(glm::vec3 dloc)
     mLoc += dloc;
     calculateView();
     calculateVP();
+    // TODO: fix me
+    if (mProjectionType == projectionType::orthographic) {
+        setOrthographic();
+    }
 }
 
 inline void Camera::calculateView()

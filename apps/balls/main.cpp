@@ -34,17 +34,18 @@ int main()
 
     window.fpsLimit(60);
 
-    cam.zoom(0.1);
-    cam.setupInput();
+    cam.setLoc(glm::vec3(0, 0, 5));
+    cam.setOrthographic();
+    cam.enableInput();
 
     Hd::Gui gui;
-    gui.addFunc(guifunc);
+    gui.Functions.add(guifunc);
 
     Hd::Shader borderShader(
         "../res/shaders/vertex.glsl", "../res/shaders/frag.glsl");
 
-    GLint mvp = glGetUniformLocation(borderShader.Id(), "MVP");
-    GLint color = glGetUniformLocation(borderShader.Id(), "COLOR");
+    GLint mvp = glGetUniformLocation(borderShader.Id(), "u_mvp");
+    GLint color = glGetUniformLocation(borderShader.Id(), "u_color");
 
     glClearColor(0, 0, 0, 1);
 
