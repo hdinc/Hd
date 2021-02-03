@@ -25,10 +25,12 @@ public:
     void PollEvents();
     void WaitEvents();
     bool ShouldClose();
+
     int getFps();
     glm::vec2 getFramebufferSize();
     glm::vec2 getFramebufferScale();
     glm::vec2 getMousePos();
+    void setMousePos(glm::vec2 p);
 
     FunctionList<void, double, double> CursorPosCb;
     FunctionList<void, double, double> ScrollCb;
@@ -108,6 +110,15 @@ inline glm::vec2 Window::getFramebufferScale()
 inline glm::vec2 Window::getMousePos()
 {
     return mMousePos;
+}
+
+// sets the mouse position to normalized p.
+inline void Window::setMousePos(glm::vec2 p)
+{
+    mMousePos = p;
+    auto k = (glm::vec2(p.x, -p.y) + 1.0f) / 2.0f;
+    glm::vec2 a = k * mFramebufferSize;
+    glfwSetCursorPos(mWindowId, a.x, a.y);
 }
 
 }
