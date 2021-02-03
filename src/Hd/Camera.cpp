@@ -17,7 +17,7 @@ Camera::Camera()
 
     using namespace std::placeholders;
     auto f = std::bind(&Camera::onFramebufferSizeChange, this, _1, _2);
-    ids[1] = gWindow->FramebufferSizeCb.add(f);
+    ids[0] = gWindow->FramebufferSizeCb.add(f);
 
     if (mProjectionType == projectionType::perspective) {
         setPerspective(mPerspectiveFOV);
