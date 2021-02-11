@@ -1,9 +1,9 @@
 #version 450 core
 
-layout(location = 1) uniform vec3 u_color = vec3(1.0);
+layout(location = 3) uniform vec4 u_color = vec4(1);
 out vec4 c;
 
 void main()
 {
-    c = vec4(u_color,1.0f);
+    c = u_color;
 }

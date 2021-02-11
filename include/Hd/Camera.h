@@ -20,13 +20,16 @@ public:
     void setPerspective(float fov);
     void setOrthographic();
 
-    void setLoc(glm::vec3 loc);
-    void move(glm::vec3 dloc);
+    glm::mat4* getView() { return &mView; };
+    glm::mat4* getProjection() { return &mProjection; };
+    glm::mat4* getVP() { return &mVP; };
 
-    glm::mat4* getView();
-    glm::mat4* getProjection();
-    glm::mat4* getVP();
-    glm::vec3 getLoc();
+    void setLoc(glm::vec3 v)
+    {
+        mPolarLoc = toPolar(v);
+        calculateView();
+        calculateVP();
+    }
 
     void enableInput();
     void disableInput();
@@ -35,8 +38,10 @@ private:
     glm::mat4 mView;
     glm::mat4 mProjection;
     glm::mat4 mVP;
-    glm::vec3 mLoc = glm::vec3(0, 1, 1);
-    glm::vec3 mTarget = glm::vec3(0);
+
+    glm::vec3 mPolarLoc = glm::vec3(10, glm::pi<float>() / 4.0f, 0.0f);
+    glm::vec3 mPolarTarget = glm::vec3(0);
+
     glm::vec2 mProjectionScale;
 
     float mPerspectiveFOV = glm::radians(45.0f);
@@ -46,69 +51,20 @@ private:
     bool mDrag = false;
     glm::vec2 mDragStart;
 
-    void calculateView();
-    void calculateVP();
-
     bool inputEnabled = false;
     int ids[4] = { 0 };
+
+private:
+    void calculateView();
+    void calculateVP();
 
     void onScroll(double dx, double dy);
     void onFramebufferSizeChange(int x, int y);
     void onMouseMovement(double x, double y);
     void onMouseButtonClick(int button, int action, int mods);
+
+    glm::vec3 toEuclidean(glm::vec3 v);
+    glm::vec3 toPolar(glm::vec3 v);
 };
-
-inline void Camera::setOrthographic()
-{
-    // TODO: fix me
-    mProjectionType = projectionType::orthographic;
-
-    glm::vec2 v = 1.0f / mProjectionScale;
-    auto d = glm::length(mLoc - mTarget);
-    mProjection = glm::ortho(-v.x * d, v.x * d, -v.y * d, v.y * d, -1000000.f, 1000000.f);
-    calculateVP();
-}
-
-inline void Camera::setPerspective(float fov)
-{
-    mProjectionType = projectionType::perspective;
-    mPerspectiveFOV = fov;
-    float aspect = mProjectionScale.y / mProjectionScale.x;
-    mProjection = glm::perspective(fov, aspect, 0.01f, 100000.0f);
-    calculateVP();
-}
-
-inline void Camera::setLoc(glm::vec3 loc)
-{
-    mLoc = loc;
-    calculateView();
-    calculateVP();
-}
-
-inline void Camera::move(glm::vec3 dloc)
-{
-    mLoc += dloc;
-    calculateView();
-    calculateVP();
-    // TODO: fix me
-    if (mProjectionType == projectionType::orthographic) {
-        setOrthographic();
-    }
-}
-
-inline void Camera::calculateView()
-{
-    mView = glm::lookAt(mLoc, mTarget, glm::vec3(0.0f, 1.0f, 0.0f));
-}
-
-inline void Camera::calculateVP()
-{
-    mVP = mProjection * mView;
-}
-
-inline glm::mat4* Camera::getView() { return &mView; }
-inline glm::mat4* Camera::getProjection() { return &mProjection; }
-inline glm::mat4* Camera::getVP() { return &mVP; }
-inline glm::vec3 Camera::getLoc() { return mLoc; }
 
 }

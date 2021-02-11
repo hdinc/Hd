@@ -19,6 +19,8 @@ Camera::Camera()
     auto f = std::bind(&Camera::onFramebufferSizeChange, this, _1, _2);
     ids[0] = gWindow->FramebufferSizeCb.add(f);
 
+    calculateView();
+
     if (mProjectionType == projectionType::perspective) {
         setPerspective(mPerspectiveFOV);
     } else {
@@ -37,13 +39,9 @@ Camera::~Camera()
 void Camera::onScroll(double dx, double dy)
 {
     (void)dx;
-
-    if (mDrag)
-        return;
-
-    glm::vec3 v = mLoc - mTarget;
-
-    move(-v * (float)dy / 10.0f);
+    mPolarLoc.x *= (dy < 0) ? 1.1 : 1 / 1.1;
+    calculateView();
+    calculateVP();
 }
 
 void Camera::onFramebufferSizeChange(int x, int y)
@@ -65,15 +63,17 @@ void Camera::onMouseMovement(double x, double y)
     (void)x;
     (void)y;
 
-    if (mDrag) {
-        auto a = gWindow->getMousePos() - mDragStart;
+    auto pos = gWindow->getMousePos();
+    auto a = pos - mDragStart;
+    mDragStart = pos;
 
-        // broken
-        a /= mProjectionScale;
-        glm::vec3 rotateAxis = glm::normalize(glm::cross(mTarget - mLoc, glm::vec3(a, 0.0f)));
-        glm::vec3 nloc = glm::rotate(glm::mat4(1), glm::length(a), rotateAxis) * glm::vec4(mLoc, 1.0f);
-        mView = glm::lookAt(nloc, mTarget, glm::vec3(0.0f, 1.0f, 0.0f));
-        mVP = mProjection * mView;
+    a /= mProjectionScale;
+
+    if (mDrag) {
+        mPolarLoc.y -= 2 * a.y;
+        mPolarLoc.z -= 2 * a.x;
+        calculateView();
+        calculateVP();
     }
 }
 
@@ -81,20 +81,14 @@ void Camera::onMouseButtonClick(int button, int action, int mods)
 {
     (void)mods;
 
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS && mDrag == false) {
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS) {
         mDrag = true;
+        glfwSetInputMode(gWindow->Id(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         mDragStart = gWindow->getMousePos();
     }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE && mDrag == true) {
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
         mDrag = false;
-
-        // broken
-        auto a = gWindow->getMousePos() - mDragStart;
-        a /= mProjectionScale;
-        glm::vec3 rotateAxis = glm::normalize(glm::cross(mTarget - mLoc, glm::vec3(a, 0.0f)));
-        mLoc = glm::rotate(glm::mat4(1), glm::length(a), rotateAxis) * glm::vec4(mLoc, 1.0f);
-        calculateView();
-        calculateVP();
+        glfwSetInputMode(gWindow->Id(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
 }
 
@@ -118,6 +112,63 @@ void Camera::disableInput()
     gWindow->ScrollCb.remove(ids[1]);
     gWindow->CursorPosCb.remove(ids[2]);
     gWindow->MouseButtonCb.remove(ids[3]);
+}
+
+void Camera::setOrthographic()
+{
+    // TODO: fix me
+    mProjectionType = projectionType::orthographic;
+
+    /* glm::vec2 v = 1.0f / mProjectionScale; */
+    /* auto loc = glm::vec3(; */
+
+    /* auto d = glm::length(mLoc - mTarget); */
+    /* mProjection = glm::ortho(-v.x * d, v.x * d, -v.y * d, v.y * d, -1000000.f, 1000000.f); */
+    /* calculateVP(); */
+}
+
+void Camera::setPerspective(float fov)
+{
+    mProjectionType = projectionType::perspective;
+    mPerspectiveFOV = fov;
+    float aspect = mProjectionScale.y / mProjectionScale.x;
+    mProjection = glm::perspective(fov, aspect, 0.01f, 100000.0f);
+    calculateVP();
+}
+
+void Camera::calculateView()
+{
+    /* mView = glm::lookAt(toEuclidean(mPolarLoc), toEuclidean(mPolarTarget), mUp); */
+
+    glm::mat4 ViewTranslate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -mPolarLoc.x));
+    glm::mat4 ViewRotateX = glm::rotate(ViewTranslate, this->mPolarLoc.y, glm::vec3(1.f, 0.f, 0.f));
+    mView = glm::rotate(ViewRotateX, -this->mPolarLoc.z, glm::vec3(0.f, 1.f, 0.f));
+}
+
+void Camera::calculateVP()
+{
+    mVP = mProjection * mView;
+}
+
+glm::vec3 Camera::toEuclidean(glm::vec3 v)
+{
+    glm::vec3 r;
+    r.x = v.x * sin(v.y) * cos(v.z);
+    r.y = v.x * cos(v.y);
+    r.z = v.x * sin(v.y) * sin(v.z);
+
+    return r;
+}
+
+glm::vec3 Camera::toPolar(glm::vec3 v)
+{
+    // TODO: fix zero condition
+    glm::vec3 r;
+    r.x = glm::length(v);
+    r.y = atan(glm::length(glm::vec2(v.x, v.z)) / v.y);
+    r.z = atan(v.x / v.z);
+
+    return r;
 }
 
 }
