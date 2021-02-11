@@ -1,8 +1,8 @@
-#version 330 core
+#version 450 core
 
-uniform mat4 MVP = mat4(1);
-uniform vec2 POINTS[2];
+layout(location=0) uniform mat4 u_mvp = mat4(1);
+layout(location=1) uniform vec3 u_points[2];
 
 void main() {
-    gl_Position = MVP * vec4(POINTS[gl_VertexID],0.0,1.0);
+    gl_Position = u_mvp * vec4(u_points[gl_VertexID],1.0);
 }
