@@ -152,21 +152,22 @@ void Camera::calculateVP()
 
 glm::vec3 Camera::toEuclidean(glm::vec3 v)
 {
+    // TODO: why?
     glm::vec3 r;
-    r.x = v.x * sin(v.y) * cos(v.z);
-    r.y = v.x * cos(v.y);
-    r.z = v.x * sin(v.y) * sin(v.z);
+    r.x = v.x * cos(v.y) * sin(v.z);
+    r.y = v.x * sin(v.y);
+    r.z = v.x * cos(v.y) * cos(v.z);
 
     return r;
 }
 
 glm::vec3 Camera::toPolar(glm::vec3 v)
 {
-    // TODO: fix zero condition
+    // TODO: fix zero condition better way
     glm::vec3 r;
     r.x = glm::length(v);
     r.y = atan(glm::length(glm::vec2(v.x, v.z)) / v.y);
-    r.z = atan(v.x / v.z);
+    r.z = v.z == 0 ? 0 : atan(v.x / v.z);
 
     return r;
 }

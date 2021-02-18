@@ -31,6 +31,11 @@ public:
         calculateVP();
     }
 
+    glm::vec3 getLoc()
+    {
+        return toEuclidean(mPolarLoc);
+    }
+
     void enableInput();
     void disableInput();
 

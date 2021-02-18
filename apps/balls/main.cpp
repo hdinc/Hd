@@ -34,7 +34,7 @@ int main()
 
     window.fpsLimit(60);
 
-    cam.setLoc(glm::vec3(0, 0, 5));
+    cam.setLoc(glm::vec3(0, 5, 0));
     cam.setOrthographic();
     cam.enableInput();
 
@@ -86,7 +86,7 @@ int main()
             borderShader.Bind();
             glUniformMatrix4fv(mvp, 1, GL_FALSE, glm::value_ptr(*cam.getVP()));
             glBindVertexArray(vao_square);
-            glUniform3f(color, 0, 1, 1);
+            glUniform4f(color, 0, 1, 1, 1);
             glDrawArrays(GL_LINE_LOOP, 0, 4);
         }
 
