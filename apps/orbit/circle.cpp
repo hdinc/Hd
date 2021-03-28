@@ -23,7 +23,7 @@ void circle::init_gldata(Hd::Shader* s, glm::mat4* v, glm::mat4* p)
     MVP = glGetUniformLocation(shader->Id(), "u_mvp");
     COLOR = glGetUniformLocation(shader->Id(), "u_color");
     shader->Bind();
-    glUniform3f(COLOR, 1, 1, 1);
+    glUniform4f(COLOR, 1, 1, 1, 1);
 
     auto vertices = new float[vcount][2];
     for (int i = 0; i < vcount; i++) {
@@ -56,7 +56,7 @@ void circle::draw()
     mvp = *projection * *viewport * model;
     shader->Bind();
     glUniformMatrix4fv(MVP, 1, GL_FALSE, glm::value_ptr(mvp));
-    glUniform3f(COLOR, color.x, color.y, color.z);
+    glUniform4f(COLOR, color.x, color.y, color.z, 1);
     glDrawArrays(GL_LINE_LOOP, 0, vcount);
 }
 

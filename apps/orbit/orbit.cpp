@@ -28,8 +28,8 @@ public:
         view = v;
         projection = p;
 
-        COLOR = glGetUniformLocation(shader->Id(), "COLOR");
-        MVP = glGetUniformLocation(shader->Id(), "MVP");
+        COLOR = glGetUniformLocation(shader->Id(), "u_color");
+        MVP = glGetUniformLocation(shader->Id(), "u_mvp");
 
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
@@ -64,7 +64,7 @@ public:
         shader->Bind();
         glm::mat4 mvp = *projection * *view;
         glUniformMatrix4fv(MVP, 1, GL_FALSE, glm::value_ptr(mvp));
-        glUniform3f(COLOR, .1, .1, .1);
+        glUniform4f(COLOR, .1, .1, .1, 1.0);
         glDrawArrays(GL_LINES, 0, c * 8);
     }
     ~grid()
@@ -90,7 +90,7 @@ public:
     {
         MVP = glGetUniformLocation(shader.Id(), "MVP");
         POINTS = glGetUniformLocation(shader.Id(), "POINTS");
-        COLOR = glGetUniformLocation(shader.Id(), "COLOR");
+        COLOR = glGetUniformLocation(shader.Id(), "u_color");
     }
     ~line() { }
     void draw(glm::vec2 from, glm::vec2 to)
@@ -102,7 +102,7 @@ public:
         mvp = *projection * *view;
         glUniformMatrix4fv(MVP, 1, 0, glm::value_ptr(mvp));
         glUniform2fv(POINTS, 2, glm::value_ptr(a[0]));
-        glUniform3fv(COLOR, 1, glm::value_ptr(color));
+        glUniform4fv(COLOR, 1, glm::value_ptr(glm::vec4(color, 1)));
         glDrawArrays(GL_LINES, 0, 2);
     }
 
@@ -111,7 +111,7 @@ public:
         shader.Bind();
         mvp = *projection * *view;
         glUniformMatrix4fv(MVP, 1, 0, glm::value_ptr(mvp));
-        glUniform3fv(COLOR, 1, glm::value_ptr(color));
+        glUniform4fv(COLOR, 1, glm::value_ptr(glm::vec4(color, 1)));
         for (int i = 0; i < count - 1; i++) {
             glUniform2fv(POINTS, 2, glm::value_ptr(v[i]));
             glDrawArrays(GL_LINES, 0, 2);
@@ -238,7 +238,7 @@ int main()
             glBindVertexArray(vao);
             circle_shader.Bind();
             glUniformMatrix4fv(MVP, 1, 0, glm::value_ptr(*cam.getVP()));
-            glUniform3f(COLOR, .3, 5, .1);
+            glUniform4f(COLOR, .3, 5, .1, 1.0);
             glDrawArrays(GL_LINE_STRIP, 0, path_size);
             glFinish();
             path_draw_time = glfwGetTime() - path_draw_time;
