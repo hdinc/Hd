@@ -18,8 +18,9 @@ namespace Hd {
 
 Window* gWindow;
 
-const char* Hd::Window::mName = "Window";
-int Hd::Window::mSize[2] = { 1000, 1000 };
+const char* Window::mName = "Window";
+int Window::mSize[2] = { 1000, 1000 };
+Window::glProfile Window::mGlProfile = Window::glProfile::core;
 
 Window& Window::getInstance()
 {
@@ -37,7 +38,10 @@ Window::Window()
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    if (mGlProfile == glProfile::core)
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    else
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 
 #ifndef NDEBUG
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);

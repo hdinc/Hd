@@ -10,9 +10,16 @@ namespace Hd {
 class Window {
 
 public:
+    enum class glProfile {
+        core,
+        compat
+    };
+
+public:
     static Window& getInstance();
     static void setName(const char* name);
     static void setSize(int x, int y);
+    static void setGlProfile(glProfile profile);
 
     Window(Window const&) = delete;
     void operator=(Window const&) = delete;
@@ -53,6 +60,7 @@ private:
 
     static const char* mName;
     static int mSize[2];
+    static glProfile mGlProfile;
 
     void waitFpsLimit();
 
@@ -76,6 +84,7 @@ inline void Window::setSize(int x, int y)
     mSize[0] = x;
     mSize[1] = y;
 }
+inline void Window::setGlProfile(Window::glProfile profile) { mGlProfile = profile; }
 
 inline void Window::SwapBuffers()
 {
