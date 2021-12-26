@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.10)
 
 project(Hd VERSION 0.0.0)
 
+set(GLFW_BUILD_DOCS off CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS off CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES off CACHE BOOL "" FORCE)
+set(GLFW_INSTALL off CACHE BOOL "" FORCE)
+
 add_subdirectory(deps/glfw)
 add_subdirectory(deps/glad)
 add_subdirectory(deps/imgui)
