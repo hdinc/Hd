@@ -32,7 +32,7 @@ int main()
 
     auto mesh = l.LoadedMeshes[0];
 
-    uint vao, vbo, ibo;
+    uint32_t vao, vbo, ibo;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
     glGenBuffers(1, &vbo);
