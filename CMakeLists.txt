@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 3.10)
 
 project(Hd VERSION 0.0.0)
 
-find_package(glfw3 CONFIG REQUIRED)
+add_subdirectory(deps/glfw)
 add_subdirectory(deps/glad)
 add_subdirectory(deps/imgui)
 add_subdirectory(deps/stb)
+add_subdirectory(deps/glm)
 
 if(MSVC)
   add_compile_options(/W4)
@@ -23,7 +24,7 @@ set(SRC
 )
 
 add_library(Hd ${SRC})
-target_link_libraries(Hd glfw glad imgui stb)
+target_link_libraries(Hd glfw glad imgui stb glm)
 
 target_include_directories(Hd PUBLIC include)
 
