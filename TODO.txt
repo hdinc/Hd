@@ -7,3 +7,4 @@ use std::function for callbacks
 make +z up instead of +y
 
 add option to use system libraries without pulling submodules
+fix input lag on windows and fps limit
