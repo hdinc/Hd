@@ -39,8 +39,15 @@ Camera::~Camera()
 void Camera::onScroll(double dx, double dy)
 {
     (void)dx;
+
     mPolarLoc.x *= (dy < 0) ? 1.1 : 1 / 1.1;
+    // auto loc = glm::vec4(gWindow->getMousePos(), 0.0f, 0.0f) * glm::inverse(mView);
+    mLoc.z *= (dy < 0) ? 1.1 : 1 / 1.1;
     calculateView();
+    // auto locn = glm::vec4(gWindow->getMousePos(), 0.0f, 0.0f) * glm::inverse(mView);
+    // mLoc.x += (locn - loc).x;
+    // mLoc.x += (locn - loc).x;
+    // calculateView();
     calculateVP();
 }
 
@@ -72,6 +79,7 @@ void Camera::onMouseMovement(double x, double y)
     if (mDrag) {
         mPolarLoc.y -= 2 * a.y;
         mPolarLoc.z -= 2 * a.x;
+        mLoc -= mLoc.z * glm::vec3(a, 0.0f);
         calculateView();
         calculateVP();
     }
@@ -83,12 +91,14 @@ void Camera::onMouseButtonClick(int button, int action, int mods)
 
     if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS) {
         mDrag = true;
-        glfwSetInputMode(gWindow->Id(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        if (mProjectionType == projectionType::perspective)
+            glfwSetInputMode(gWindow->Id(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         mDragStart = gWindow->getMousePos();
     }
     if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
         mDrag = false;
-        glfwSetInputMode(gWindow->Id(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        if (mProjectionType == projectionType::perspective)
+            glfwSetInputMode(gWindow->Id(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
 }
 
@@ -119,12 +129,10 @@ void Camera::setOrthographic()
     // TODO: fix me
     mProjectionType = projectionType::orthographic;
 
-    /* glm::vec2 v = 1.0f / mProjectionScale; */
-    /* auto loc = glm::vec3(; */
+    glm::vec2 v = 1.0f / mProjectionScale;
 
-    /* auto d = glm::length(mLoc - mTarget); */
-    /* mProjection = glm::ortho(-v.x * d, v.x * d, -v.y * d, v.y * d, -1000000.f, 1000000.f); */
-    /* calculateVP(); */
+    mProjection = glm::ortho(-v.x, v.x, -v.y, v.y, -100.f, 100.f);
+    calculateVP();
 }
 
 void Camera::setPerspective(float fov)
@@ -140,9 +148,16 @@ void Camera::calculateView()
 {
     /* mView = glm::lookAt(toEuclidean(mPolarLoc), toEuclidean(mPolarTarget), mUp); */
 
-    glm::mat4 ViewTranslate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -mPolarLoc.x));
-    glm::mat4 ViewRotateX = glm::rotate(ViewTranslate, this->mPolarLoc.y, glm::vec3(1.f, 0.f, 0.f));
-    mView = glm::rotate(ViewRotateX, -this->mPolarLoc.z, glm::vec3(0.f, 1.f, 0.f));
+    if (mProjectionType == projectionType::perspective) {
+        glm::mat4 ViewTranslate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -mPolarLoc.x));
+        glm::mat4 ViewRotateX = glm::rotate(ViewTranslate, this->mPolarLoc.y, glm::vec3(1.f, 0.f, 0.f));
+        mView = glm::rotate(ViewRotateX, -this->mPolarLoc.z, glm::vec3(0.f, 1.f, 0.f));
+    } else {
+        auto d = mLoc - mTarget;
+        mView = glm::mat4(1.0f);
+        mView = glm::scale(mView, glm::vec3(1.0f / d.z));
+        mView = glm::translate(mView, glm::vec3(-d.x, -d.y, 0.0f));
+    }
 }
 
 void Camera::calculateVP()

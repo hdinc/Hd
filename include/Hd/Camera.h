@@ -27,13 +27,14 @@ public:
     void setLoc(glm::vec3 v)
     {
         mPolarLoc = toPolar(v);
+        mLoc = v;
         calculateView();
         calculateVP();
     }
 
     glm::vec3 getLoc()
     {
-        return toEuclidean(mPolarLoc);
+        return (mProjectionType == projectionType::perspective) ? toEuclidean(mPolarLoc) : mLoc;
     }
 
     void enableInput();
@@ -46,6 +47,9 @@ private:
 
     glm::vec3 mPolarLoc = glm::vec3(10, glm::pi<float>() / 4.0f, 0.0f);
     glm::vec3 mPolarTarget = glm::vec3(0);
+
+    glm::vec3 mLoc = glm::vec3(0, 0, 10);
+    glm::vec3 mTarget = glm::vec3(0, 0, 0);
 
     glm::vec2 mProjectionScale;
 
