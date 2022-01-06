@@ -1,3 +1,8 @@
+#ifdef _WIN32
+    #define _USE_MATH_DEFINES
+    #include <cmath>
+#endif
+
 #include "circle.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>

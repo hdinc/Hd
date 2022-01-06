@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include <Hd/Shader.h>
 
+#ifdef _WIN32
+    #include <malloc.h>
+    #define alloca _alloca
+#endif
+
 static const char* GetFile(const char* filename);
 
 namespace Hd {
