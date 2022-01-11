@@ -167,7 +167,7 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
     (void)window;
 
     if (gWindow->hasGui)
-        if (ImGui::IsAnyWindowHovered())
+        if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
             return;
 
     gWindow->KeyCb.run(key, scancode, action, mods);
@@ -178,7 +178,7 @@ void Window::mouse_button_callback(GLFWwindow* window, int button, int action, i
     (void)window;
 
     if (gWindow->hasGui)
-        if (ImGui::IsAnyWindowHovered())
+        if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
             return;
 
     gWindow->MouseButtonCb.run(button, action, mods);
@@ -189,7 +189,7 @@ void Window::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     (void)window;
 
     if (gWindow->hasGui)
-        if (ImGui::IsAnyWindowHovered())
+        if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow))
             return;
 
     gWindow->ScrollCb.run(xoffset, yoffset);
