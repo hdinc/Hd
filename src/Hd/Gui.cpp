@@ -19,6 +19,7 @@ Gui::Gui()
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigDockingWithShift = true;
 
     ImGui::StyleColorsDark();
 
