@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <functional>
-#include <vector>
+#include <list>
 
 namespace Hd {
 
@@ -19,10 +19,11 @@ public:
 
     void remove(int id)
     {
-        for (int i = 0; i < mIds.size(); i++) {
-            if (mIds[i] == id) {
-                mIds.erase(mIds.begin() + i);
-                mFunctions.erase(mFunctions.begin() + i);
+        for (auto it = mIds.begin(), itf = mFunctions.begin();
+             it != mIds.end(); it++, itf++) {
+            if (*it == id) {
+                mIds.erase(it);
+                mFunctions.erase(itf);
                 return;
             }
         }
@@ -37,8 +38,8 @@ public:
     }
 
 private:
-    std::vector<std::function<R(Args...)>> mFunctions;
-    std::vector<int> mIds;
+    std::list<std::function<R(Args...)>> mFunctions;
+    std::list<int> mIds;
     int id = 0;
 };
 
