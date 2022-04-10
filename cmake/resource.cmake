@@ -12,7 +12,7 @@ function(add_resource_dir target folder)
     add_custom_command(
         OUTPUT res.myar
         COMMAND ${MYAR_DIR}/myar archive ${folder} -o ${CMAKE_CURRENT_BINARY_DIR}/res.myar
-        DEPENDS myar ${files}
+        DEPENDS myar-bin ${files}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
 
