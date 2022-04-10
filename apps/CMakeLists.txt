@@ -4,6 +4,7 @@ add_subdirectory(texture_test)
 add_subdirectory(balls)
 add_subdirectory(orbit)
 add_subdirectory(3dtest)
+add_subdirectory(resource_test)
 
 # TODO: fix symbolic link on windows
 execute_process(

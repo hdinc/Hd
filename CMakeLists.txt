@@ -12,6 +12,8 @@ add_subdirectory(deps/glad)
 add_subdirectory(deps/imgui)
 add_subdirectory(deps/stb)
 add_subdirectory(deps/glm)
+add_subdirectory(deps/myar)
+add_subdirectory(deps/ELFIO)
 
 if(MSVC)
     add_compile_options(/W4)
@@ -26,10 +28,11 @@ set(SRC
     src/Hd/Gui.cpp
     src/Hd/FrameBuffer.cpp
     src/Hd/Camera.cpp
+    src/Hd/Resource.cpp
 )
 
 add_library(Hd ${SRC})
-target_link_libraries(Hd glfw glad imgui stb glm)
+target_link_libraries(Hd glfw glad imgui stb glm myar elfio::elfio)
 
 target_include_directories(Hd PUBLIC include)
 

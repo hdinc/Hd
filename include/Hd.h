@@ -7,3 +7,4 @@
 #include <Hd/Gui.h>
 #include <Hd/FrameBuffer.h>
 #include <Hd/Camera.h>
+#include <Hd/Resource.h>
