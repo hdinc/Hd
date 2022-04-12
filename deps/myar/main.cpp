@@ -10,6 +10,8 @@ void usage()
     printf("Usage: myar <archive|extract> <dir|file> [-o <name>]\n");
 }
 
+bool overwrite = false;
+
 int main(int argc, char** argv)
 {
     if (argc < 3) {
@@ -22,11 +24,12 @@ int main(int argc, char** argv)
         std::string dir = argv[2];
         std::string name;
 
-        if (argc != 5) {
+        if (argc < 5) {
             printf("wrong argument\n");
             usage();
             exit(1);
         }
+
         if (strcmp(argv[3], "-o")) {
             printf("wrong argument\n");
             usage();
@@ -36,12 +39,26 @@ int main(int argc, char** argv)
             name = argv[4];
         }
 
+        if (argc == 6 && !strcmp(argv[5], "-f")) {
+            overwrite = true;
+        }
+
         // FILE* fp = fopen(name.c_str(), "w");
 
         // if (!fp) {
         //     printf("cannot open %s\n", name.c_str());
         //     exit(1);
         // }
+
+        if (!overwrite) {
+            // check if file exist
+            FILE* fp = fopen(name.c_str(), "r");
+
+            if (fp) {
+                printf("file %s exist\n", name.c_str());
+                exit(1);
+            }
+        }
 
         myar::archiver archiver;
 

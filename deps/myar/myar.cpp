@@ -7,6 +7,8 @@
 #include <vector>
 #include "myar.h"
 
+// TODO: write files first then header
+
 namespace myar {
 
 char magic[4] = { 'M', 'Y', 'A', 'R' };
@@ -80,6 +82,19 @@ const char* reader::get_file(std::string filename)
     return 0;
 }
 
+long reader::get_file_size(std::string filename)
+{
+    if (!loaded)
+        return 0;
+
+    for (int i = 0; i < header.size(); i++) {
+        if (!strcmp(filename.c_str(), &buf[header[i].name_offset])) {
+            return header[i].data_size;
+        }
+    }
+    return 0;
+}
+
 void reader::list_files()
 {
     if (!loaded)
@@ -132,15 +147,6 @@ void archiver::write(std::string file)
 {
     FILE* fp;
 
-    // check if file exist
-    fp = fopen(file.c_str(), "r");
-
-    if (fp) {
-        printf("file %s exist\n", file.c_str());
-        exit(1);
-    }
-
-    // reopen file in write mode
     fp = fopen(file.c_str(), "wb");
 
     if (!fp) {

@@ -33,6 +33,7 @@ public:
     void load(const char* buf, long size);
     void load(std::string filename);
     const char* get_file(std::string filename);
+    long get_file_size(std::string filename);
     void list_files();
 };
 
