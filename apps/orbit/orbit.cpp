@@ -11,6 +11,8 @@
 #include "circle.h"
 #include <stdio.h>
 
+Hd::Resource* gres;
+
 void guifunc();
 
 class grid {
@@ -82,7 +84,7 @@ public:
     glm::mat4 *view, *projection;
     glm::mat4 mvp;
     line(glm::mat4* v, glm::mat4* p)
-        : shader("../res/shaders/line.glsl", "../res/shaders/frag.glsl")
+        : shader(gres->get_file("res/line.glsl"), gres->get_file("res/frag.glsl"))
         , color(0.5f, 0.7f, 0.1f)
         , view(v)
         , projection(p)
@@ -175,7 +177,7 @@ void calculate_path()
     last_calculate_time = glfwGetTime() - last_calculate_time;
 }
 
-int main()
+int main(int argc, char** argv)
 {
 
     Hd::Window::setSize(1000, 1000);
@@ -192,8 +194,10 @@ int main()
     Hd::Gui gui;
     gui.Functions.add(guifunc);
 
-    Hd::Shader circle_shader(
-        "../res/shaders/vertex.glsl", "../res/shaders/frag.glsl");
+    Hd::Resource& res = Hd::Resource::getInstance(argv[0]);
+    gres = &res;
+
+    Hd::Shader circle_shader(res.get_file("res/vertex.glsl"), res.get_file("res/frag.glsl"));
 
     {
         glGenVertexArrays(1, &vao);

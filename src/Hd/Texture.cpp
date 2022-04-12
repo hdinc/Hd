@@ -3,7 +3,7 @@
 #include <Hd/Texture.h>
 
 namespace Hd {
-Texture::Texture(const char* filename)
+Texture::Texture(const char* file, long size)
 {
 
     glGenTextures(1, &m_TextureId);
@@ -16,7 +16,7 @@ Texture::Texture(const char* filename)
 
     int width, height, nrChannels;
     stbi_set_flip_vertically_on_load(true);
-    void* data = stbi_load(filename, &width, &height, &nrChannels, 0);
+    void* data = stbi_load_from_memory((unsigned char*)file, size, &width, &height, &nrChannels, 0);
     if (!data) {
         puts("Failed to load texture");
         exit(1);

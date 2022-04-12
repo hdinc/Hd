@@ -9,6 +9,7 @@
 #include <glm/gtc/random.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
+#include <Hd/Resource.h>
 
 typedef struct {
     glm::vec2 loc[2][10];
@@ -20,11 +21,13 @@ static int cindex = 1;
 
 const int balls::mCircleVertexCount = 20;
 
+extern Hd::Resource* gres;
+
 balls::balls(glm::mat4& VP, float radius, glm::vec2 border)
     : mBorder(border)
     , mVP(VP)
-    , mShader("../res/shaders/balls.vert", "../res/shaders/balls.frag")
-    , mComputeShader("../res/shaders/balls_compute.glsl")
+    , mShader(gres->get_file("res/balls.vert"), gres->get_file("res/balls.frag"))
+    , mComputeShader(gres->get_file("res/balls_compute.glsl"))
 {
     mRadius = radius;
 

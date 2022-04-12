@@ -17,15 +17,11 @@ Shader::Shader(const char* vertex, const char* fragment)
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
     GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
 
-    const char* vss = GetFile(vertex);
-    glShaderSource(vs, 1, &vss, NULL);
-    free((void*)vss);
+    glShaderSource(vs, 1, &vertex, NULL);
     glCompileShader(vs);
     CheckError(vs, GL_COMPILE_STATUS);
 
-    const char* fss = GetFile(fragment);
-    glShaderSource(fs, 1, &fss, NULL);
-    free((void*)fss);
+    glShaderSource(fs, 1, &fragment, NULL);
     glCompileShader(fs);
     CheckError(fs, GL_COMPILE_STATUS);
 
@@ -47,21 +43,15 @@ Shader::Shader(const char* vertex, const char* geometry, const char* fragment)
     GLuint gs = glCreateShader(GL_GEOMETRY_SHADER);
     GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
 
-    const char* vss = GetFile(vertex);
-    glShaderSource(vs, 1, &vss, NULL);
-    free((void*)vss);
+    glShaderSource(vs, 1, &vertex, NULL);
     glCompileShader(vs);
     CheckError(vs, GL_COMPILE_STATUS);
 
-    const char* fss = GetFile(fragment);
-    glShaderSource(fs, 1, &fss, NULL);
-    free((void*)fss);
+    glShaderSource(fs, 1, &fragment, NULL);
     glCompileShader(fs);
     CheckError(fs, GL_COMPILE_STATUS);
 
-    const char* gss = GetFile(geometry);
-    glShaderSource(gs, 1, &gss, NULL);
-    free((void*)gss);
+    glShaderSource(gs, 1, &geometry, NULL);
     glCompileShader(gs);
     CheckError(gs, GL_COMPILE_STATUS);
 
@@ -83,9 +73,7 @@ Shader::Shader(const char* compute)
 {
     GLuint cs = glCreateShader(GL_COMPUTE_SHADER);
 
-    const char* css = GetFile(compute);
-    glShaderSource(cs, 1, &css, NULL);
-    free((void*)css);
+    glShaderSource(cs, 1, &compute, NULL);
     glCompileShader(cs);
     CheckError(cs, GL_COMPILE_STATUS);
 

@@ -25,11 +25,19 @@ float total_energy;
 balls* gballs;
 glm::vec2 border(10, 10);
 
-int main()
+Hd::Resource* gres;
+
+int main(int argc, char** argv)
 {
+    (void)argc;
+
     Hd::Window::setSize(1280, 720);
     Hd::Window::setName("balls");
     auto& window = Hd::Window::getInstance();
+
+    Hd::Resource& res = Hd::Resource::getInstance(argv[0]);
+    gres = &res;
+
     Hd::Camera cam;
 
     window.fpsLimit(60);
@@ -42,7 +50,7 @@ int main()
     gui.Functions.add(guifunc);
 
     Hd::Shader borderShader(
-        "../res/shaders/vertex.glsl", "../res/shaders/frag.glsl");
+        res.get_file("res/vertex.glsl"), res.get_file("res/frag.glsl"));
 
     GLint mvp = glGetUniformLocation(borderShader.Id(), "u_mvp");
     GLint color = glGetUniformLocation(borderShader.Id(), "u_color");

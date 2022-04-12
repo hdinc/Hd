@@ -13,11 +13,15 @@ static glm::mat4 mvp(1.0f);
 static glm::vec2 loc(0.f);
 static float zoom = 1;
 
-int main()
+int main(int argc, char** argv)
 {
+    (void)argc;
+
     Hd::Window::setName("mandelbrot");
     Hd::Window::setSize(1280, 720);
     auto& window = Hd::Window::getInstance();
+
+    Hd::Resource& res = Hd::Resource::getInstance(argv[0]);
 
     initializeImGui(window.Id());
 
@@ -35,7 +39,7 @@ int main()
     glEnableVertexAttribArray(0);
 
     Hd::Shader shader(
-        "../res/shaders/vertex.glsl", "../res/shaders/mandelbrot.glsl");
+        res.get_file("res/vertex.glsl"), res.get_file("res/mandelbrot.glsl"));
     shader.Bind();
 
     GLint u_mvp = glGetUniformLocation(shader.Id(), "MVP");

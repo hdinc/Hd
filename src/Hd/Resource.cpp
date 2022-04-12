@@ -28,7 +28,23 @@ Resource::~Resource()
 
 const char* Resource::get_file(std::string filename)
 {
-    return myar_reader.get_file(filename);
+    const char* r = myar_reader.get_file(filename);
+
+    if (!r) {
+        printf("[Resource] cannot get file: %s\n", filename.c_str());
+    }
+    return r;
+}
+
+long Resource::get_file_size(std::string filename)
+{
+
+    long r = myar_reader.get_file_size(filename);
+
+    if (!r) {
+        printf("[Resource] cannot get file: %s\n", filename.c_str());
+    }
+    return r;
 }
 
 }

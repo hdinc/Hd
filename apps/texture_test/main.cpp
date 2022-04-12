@@ -10,15 +10,19 @@ static glm::vec2 loc(0.f);
 static float zoom = 1;
 static float izoom = 1;
 
-int main()
+int main(int argc, char** argv)
 {
+    (void)argc;
+
     Hd::Window::setName("test");
     Hd::Window::setSize(500, 500);
     auto& window = Hd::Window::getInstance();
 
+    Hd::Resource& res = Hd::Resource::getInstance(argv[0]);
+
     Hd::Shader shader(
-        "../res/shaders/vertex.glsl", "../res/shaders/texture.glsl");
-    Hd::Texture texture("../res/textures/diyojen.png");
+        res.get_file("res/vertex.glsl"), res.get_file("res/texture.glsl"));
+    Hd::Texture texture(res.get_file("res/diyojen.png"), res.get_file_size("res/diyojen.png"));
     Hd::Gui gui;
     gui.Functions.add(guifunc);
 

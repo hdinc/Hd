@@ -6,7 +6,7 @@ namespace Hd {
 
 class Texture {
 public:
-    Texture(const char* filename);
+    Texture(const char* file, long size);
     ~Texture();
     GLuint Id() { return m_TextureId; }
     void Bind(unsigned int n);

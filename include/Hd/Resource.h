@@ -11,6 +11,7 @@ public:
     void operator=(Resource const&) = delete;
 
     const char* get_file(std::string filename);
+    long get_file_size(std::string filename);
 
 private:
     Resource(const char* elf_file);

@@ -11,13 +11,23 @@ struct point {
 
 void initpoints(point* points, int count);
 
-int main()
+int main(int argc, char** argv)
 {
+    (void)argc;
 
     srand(time(0));
-    Hd::Window window("gravity", 1280, 720);
+    Hd::Window::setSize(1280, 720);
+    Hd::Window::setName("gravity");
+    Hd::Window& window = Hd::Window::getInstance();
+
+    Hd::Resource& res = Hd::Resource::getInstance(argv[0]);
+
     point points[240];
     initpoints(points, 240);
+
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
 
     GLuint pointbuf;
     glGenBuffers(1, &pointbuf);
@@ -31,12 +41,14 @@ int main()
     glVertexAttribPointer(
         0, 2, GL_FLOAT, GL_FALSE, sizeof(point), (void*)(2 * sizeof(float)));
 
-    Hd::Shader shader("vertex.glsl", "frag.glsl");
+    Hd::Shader shader(res.get_file("res/vertex.glsl"), res.get_file("res/frag.glsl"));
     shader.Bind();
 
     while (!window.ShouldClose()) {
+
         glClear(GL_COLOR_BUFFER_BIT);
-        glDrawArrays(GL_POINT, 0, 240);
+        glDrawArrays(GL_POINTS, 0, 240);
+
         window.SwapBuffers();
         window.PollEvents();
     }

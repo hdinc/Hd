@@ -11,9 +11,13 @@
 
 void guifunc();
 
-int main()
+int main(int argc, char** argv)
 {
+    (void)argc;
+
     Hd::Window& w = Hd::Window::getInstance();
+
+    Hd::Resource& res = Hd::Resource::getInstance(argv[0]);
 
     Hd::Camera cam;
     cam.setLoc(glm::vec3(0, 5, 10));
@@ -21,7 +25,7 @@ int main()
     Hd::Gui g;
     g.Functions.add(guifunc);
 
-    Hd::Shader shader("../res/shaders/vertex.glsl", "../res/shaders/texture.glsl");
+    Hd::Shader shader(res.get_file("res/vertex.glsl"), res.get_file("res/texture.glsl"));
     shader.Bind();
 
     objl::Loader l;
@@ -46,7 +50,7 @@ int main()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 
-    Hd::Texture tex("../res/textures/diyojen.png");
+    Hd::Texture tex(res.get_file("res/diyojen.png"), res.get_file_size("res/diyojen.png"));
     tex.Bind(1);
 
     /* glPolygonMode(GL_BACK, GL_LINES); */
