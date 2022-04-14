@@ -16,10 +16,8 @@ function(add_resource_dir target folder)
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
 
-    # add dependecy cant add files as dependency so wee need to create new
-    #target
-    add_custom_target(${target}_resources DEPENDS res.myar)
-    add_dependencies(${target} ${target}_resources)
+    target_sources(${target} PRIVATE res.myar)
+    set_target_properties(${target} PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/res.myar)
 
     # POST_BUILD command for patching target
     add_custom_command(
