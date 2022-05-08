@@ -8,7 +8,9 @@ set(GLFW_BUILD_EXAMPLES off CACHE BOOL "" FORCE)
 set(GLFW_INSTALL off CACHE BOOL "" FORCE)
 
 add_subdirectory(deps/glfw)
-add_subdirectory(deps/glad)
+if(NOT ANDROID)
+    add_subdirectory(deps/glad)
+endif()
 add_subdirectory(deps/imgui)
 add_subdirectory(deps/stb)
 add_subdirectory(deps/glm)
@@ -29,7 +31,16 @@ set(SRC
 )
 
 add_library(Hd ${SRC})
-target_link_libraries(Hd glfw glad imgui stb glm)
+
+if(ANDROID)
+    target_compile_definitions(Hd PUBLIC GLFW_INCLUDE_ES3)
+endif()
+
+if(ANDROID)
+    target_link_libraries(Hd glfw imgui stb glm GLESv3 android log)
+else()
+    target_link_libraries(Hd glfw glad imgui stb glm)
+endif()
 
 target_include_directories(Hd PUBLIC include)
 

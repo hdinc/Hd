@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <glad/glad.h>
+#include <glHeader.h>
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <thread>
@@ -8,11 +8,16 @@
 #include <Hd/Window.h>
 #include <Hd/FunctionList.h>
 
+#ifndef NDEBUG
 static void glfw_error_callback(int error, const char* description);
+#endif
+
+#ifndef __ANDROID__
 static void GLAPIENTRY messagecallback(
     GLenum source, GLenum type, GLuint id,
     GLenum severity, GLsizei length, const GLchar* message,
     const void* userParam);
+#endif
 
 namespace Hd {
 
@@ -57,14 +62,18 @@ Window::Window()
     glfwSetFramebufferSizeCallback(mWindowId, framebuffer_size_callback);
 
     glfwMakeContextCurrent(mWindowId);
+#ifndef __ANDROID__
     gladLoadGL();
+#endif
 
 #ifndef NDEBUG
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    #ifndef __ANDROID__
     glDebugMessageCallback(messagecallback, nullptr);
     glDebugMessageControl(
         GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, true);
+    #endif
 #endif
 
     glfwSwapInterval(mVsync ? 1 : 0);
@@ -211,11 +220,14 @@ void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height
 
 }
 
+#ifndef NDEBUG
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
+#endif
 
+#ifndef __ANDROID__
 static void GLAPIENTRY messagecallback(GLenum source, GLenum type, GLuint id,
     GLenum severity, GLsizei length, const GLchar* message,
     const void* userParam)
@@ -297,3 +309,4 @@ static void GLAPIENTRY messagecallback(GLenum source, GLenum type, GLuint id,
     }
     puts("");
 }
+#endif

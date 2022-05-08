@@ -1,5 +1,5 @@
 #include <stb/stb_image.h>
-#include <glad/glad.h>
+#include <glHeader.h>
 #include <Hd/Texture.h>
 
 namespace Hd {

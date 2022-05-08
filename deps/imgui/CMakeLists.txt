@@ -11,5 +11,7 @@ set(SRC
 add_library(imgui ${SRC})
 target_link_libraries(imgui glfw)
 
+target_compile_definitions(imgui PRIVATE GLFW_INCLUDE_ES3)
+
 target_include_directories(imgui PUBLIC ./)
 target_include_directories(imgui PUBLIC backends/ )
