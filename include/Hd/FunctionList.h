@@ -19,8 +19,9 @@ public:
 
     void remove(int id)
     {
-        for (auto it = mIds.begin(), itf = mFunctions.begin();
-             it != mIds.end(); it++, itf++) {
+        auto it = mIds.begin();
+        auto itf = mFunctions.begin();
+        for (; it != mIds.end(); it++, itf++) {
             if (*it == id) {
                 mIds.erase(it);
                 mFunctions.erase(itf);
