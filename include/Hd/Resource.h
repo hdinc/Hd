@@ -1,28 +1,14 @@
 #pragma once
 
-#include <elfio/elfio.hpp>
-#include <myar.h>
+#include <utility>
 
 namespace Hd {
 
-class Resource {
+namespace Resource {
 
-public:
-    static Resource& getInstance(const char* elf_file);
-    Resource(Resource const&) = delete;
-    void operator=(Resource const&) = delete;
+    std::pair<const char*, long> getExeRes(const char* file);
+    std::pair<const char*, long> getLibRes(const char* file);
 
-    const char* get_file(std::string filename);
-    long get_file_size(std::string filename);
+}
 
-    Resource(const char* elf_file);
-    ~Resource();
-
-private:
-    ELFIO::elfio elf_reader;
-    myar::reader myar_reader;
-
-    const char* myar_data = 0;
-    long myar_data_size = 0;
-};
 }

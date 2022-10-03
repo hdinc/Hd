@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace myar {
 
@@ -32,9 +33,9 @@ public:
 
     void load(const char* buf, long size);
     void load(std::string filename);
-    const char* get_file(std::string filename);
-    long get_file_size(std::string filename);
+    std::pair<const char*, long> get_file(std::string filename);
     void list_files();
+    bool is_loaded() { return loaded; }
 };
 
 class archiver {

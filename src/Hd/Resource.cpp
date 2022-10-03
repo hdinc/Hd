@@ -1,50 +1,46 @@
 #include <Hd/Resource.h>
+#include <myar.h>
+
+extern const char _binary_exe_res_myar_start[];
+extern const char _binary_exe_res_myar_end[];
+
+extern const char _binary_lib_res_myar_start[];
+extern const char _binary_lib_res_myar_end[];
 
 namespace Hd {
 
-Resource& Resource::getInstance(const char* elf_file)
-{
-    static Resource Resource(elf_file);
-    return Resource;
-}
+namespace Resource {
 
-Resource::Resource(const char* elf_file)
-{
-    elf_reader.load(elf_file);
+    static myar::reader exereader;
+    static myar::reader libreader;
 
-    for (int i = 0; i < elf_reader.sections.size(); i++) {
-        if (elf_reader.sections[i]->get_name() == "res.myar") {
-            myar_data = elf_reader.sections[i]->get_data();
-            myar_data_size = elf_reader.sections[i]->get_size();
+    static void loadexereader()
+    {
+        if (!exereader.is_loaded()) {
+            exereader.load(_binary_exe_res_myar_start, _binary_exe_res_myar_end - _binary_exe_res_myar_start);
         }
     }
 
-    myar_reader.load(myar_data, myar_data_size);
-}
-
-Resource::~Resource()
-{
-}
-
-const char* Resource::get_file(std::string filename)
-{
-    const char* r = myar_reader.get_file(filename);
-
-    if (!r) {
-        printf("[Resource] cannot get file: %s\n", filename.c_str());
+    static void loadlibreader()
+    {
+        if (!libreader.is_loaded()) {
+            libreader.load(_binary_lib_res_myar_start, _binary_lib_res_myar_end - _binary_lib_res_myar_start);
+        }
     }
-    return r;
-}
 
-long Resource::get_file_size(std::string filename)
-{
+    std::pair<const char*, long> getExeRes(const char* file)
+    {
+        loadexereader();
 
-    long r = myar_reader.get_file_size(filename);
-
-    if (!r) {
-        printf("[Resource] cannot get file: %s\n", filename.c_str());
+        return exereader.get_file(file);
     }
-    return r;
-}
 
+    std::pair<const char*, long> getLibRes(const char* file)
+    {
+        loadlibreader();
+
+        return libreader.get_file(file);
+    }
+
+}
 }

@@ -5,26 +5,32 @@ function(add_resource_dir target folder)
     # will be recreated. when new files are added we need to rerun cmake
     file(GLOB_RECURSE files ${folder}/*)
 
+    get_target_property(target_type ${target} TYPE)
+    if (target_type STREQUAL "STATIC_LIBRARY")
+        set(prefix "lib")
+    elseif(target_type STREQUAL "EXECUTABLE")
+        set(prefix "exe")
+    endif ()
+
+
     # get the directory of myar binary
     get_target_property(MYAR_DIR myar-bin BINARY_DIR)
 
     # command for creating res.myar
     add_custom_command(
-        OUTPUT res.myar
-        COMMAND ${MYAR_DIR}/myar archive ${folder} -o ${CMAKE_CURRENT_BINARY_DIR}/res.myar -f
+        OUTPUT ${prefix}_res.myar
+        COMMAND ${MYAR_DIR}/myar archive ${folder} -o ${CMAKE_CURRENT_BINARY_DIR}/${prefix}_res.myar -f
         DEPENDS myar-bin ${files}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
 
-    target_sources(${target} PRIVATE res.myar)
-    set_target_properties(${target} PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/res.myar)
-
-    # POST_BUILD command for patching target
     add_custom_command(
-        TARGET ${target} POST_BUILD
-        COMMAND objcopy --add-section res.myar=res.myar --set-section-flags
-        res.myar=noload,readonly ${target} ${target}
+        OUTPUT ${target}_res.o
+        COMMAND objcopy -I binary -O elf64-x86-64 ${prefix}_res.myar ${target}_res.o
+        DEPENDS ${prefix}_res.myar
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
+
+    target_sources(${target} PRIVATE ${target}_res.o)
 
 endfunction()

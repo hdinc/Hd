@@ -69,30 +69,17 @@ void reader::load(std::string filename)
     load(buf, size);
 }
 
-const char* reader::get_file(std::string filename)
+std::pair<const char*, long> reader::get_file(std::string filename)
 {
     if (!loaded)
-        return 0;
+        return { 0, 0 };
 
     for (int i = 0; i < header.size(); i++) {
         if (!strcmp(filename.c_str(), &buf[header[i].name_offset])) {
-            return &buf[header[i].data_offset];
+            return { &buf[header[i].data_offset], header[i].data_size };
         }
     }
-    return 0;
-}
-
-long reader::get_file_size(std::string filename)
-{
-    if (!loaded)
-        return 0;
-
-    for (int i = 0; i < header.size(); i++) {
-        if (!strcmp(filename.c_str(), &buf[header[i].name_offset])) {
-            return header[i].data_size;
-        }
-    }
-    return 0;
+    return { 0, 0 };
 }
 
 void reader::list_files()

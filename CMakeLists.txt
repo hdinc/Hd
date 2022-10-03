@@ -13,7 +13,6 @@ add_subdirectory(deps/imgui)
 add_subdirectory(deps/stb)
 add_subdirectory(deps/glm)
 add_subdirectory(deps/myar)
-add_subdirectory(deps/ELFIO)
 
 if(MSVC)
     add_compile_options(/W4)
@@ -32,9 +31,12 @@ set(SRC
 )
 
 add_library(Hd ${SRC})
-target_link_libraries(Hd glfw glad imgui stb glm myar elfio::elfio)
+target_link_libraries(Hd glfw glad imgui stb glm myar)
 
 target_include_directories(Hd PUBLIC include)
+
+include(cmake/resource.cmake)
+add_resource_dir(Hd res/)
 
 option(build_apps "build_apps" OFF)
 if(build_apps)
