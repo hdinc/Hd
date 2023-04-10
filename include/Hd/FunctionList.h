@@ -33,8 +33,8 @@ public:
 
     void run(Args... args)
     {
-        for (auto f : mFunctions) {
-            f(args...);
+        for (int i = 0; i < mFunctions.size(); i++) {
+            mFunctions[i](args...);
         }
     }
 
