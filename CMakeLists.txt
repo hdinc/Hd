@@ -37,8 +37,3 @@ target_include_directories(Hd PUBLIC include)
 
 include(cmake/resource.cmake)
 add_resource_dir(Hd res/)
-
-option(build_apps "build_apps" OFF)
-if(build_apps)
-    add_subdirectory(apps)
-endif(build_apps)
