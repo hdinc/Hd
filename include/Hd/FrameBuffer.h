@@ -9,6 +9,10 @@ class FrameBuffer {
 public:
     FrameBuffer(Hd::Texture& tex);
     ~FrameBuffer();
+
+    FrameBuffer(const FrameBuffer&) = delete;
+    FrameBuffer& operator=(const FrameBuffer&) = delete;
+
     void Bind();
     GLuint Id();
 

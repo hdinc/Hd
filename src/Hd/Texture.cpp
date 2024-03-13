@@ -1,37 +1,89 @@
-#include <stb/stb_image.h>
 #include <glad/glad.h>
 #include <Hd/Texture.h>
+#include <opencv2/opencv.hpp>
+#include <stdio.h>
 
 namespace Hd {
-Texture::Texture(const char* file, long size)
-{
 
-    glGenTextures(1, &m_TextureId);
-    glBindTexture(GL_TEXTURE_2D, m_TextureId);
+static GLuint create_texture(int w, int h, const void* b, int c, GLenum f) {
+
+    GLuint id;
+
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true);
-    void* data = stbi_load_from_memory((unsigned char*)file, size, &width, &height, &nrChannels, 0);
-    if (!data) {
-        puts("Failed to load texture");
-        exit(1);
+    if (c == 3) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, f, GL_UNSIGNED_BYTE, b);
+    } else if (c == 4) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, f, GL_UNSIGNED_BYTE, b);
     }
-    m_Height = height;
-    m_Width = width;
-    if (nrChannels == 3)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-            GL_UNSIGNED_BYTE, data);
-    else if (nrChannels == 4)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-            GL_UNSIGNED_BYTE, data);
 
     glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(data);
+
+    return id;
+}
+
+Texture Texture::fromFile(const char* fname) {
+
+    auto image = cv::imread(fname, cv::IMREAD_UNCHANGED);
+
+    if (image.empty()) {
+        throw 1;
+    }
+
+    int nc = image.channels();
+
+    GLenum f;
+
+    if (nc == 3) {
+        f = GL_BGR;
+    } else if (nc == 4) {
+        f = GL_BGRA;
+    } else {
+        throw 2;
+    }
+
+    GLuint id = create_texture(image.cols, image.rows, image.data, nc, f);
+
+    return Hd::Texture{id, image.cols, image.rows};
+}
+
+Texture Texture::fromBitMap(const void* buf, int w, int h, int nc, GLenum format) {
+    GLuint id = create_texture(w, h, buf, nc, format);
+    return Hd::Texture{id, w, h};
+}
+
+Texture Texture::fromMemory(const void* buf, int size) {
+
+    cv::_InputArray a(static_cast<const char*>(buf), size);
+
+    auto image = cv::imdecode(a, cv::IMREAD_UNCHANGED);
+
+    if (image.empty()) {
+        throw 1;
+    }
+
+    int nc = image.channels();
+
+    GLenum f;
+
+    if (nc == 3) {
+        f = GL_BGR;
+    } else if (nc == 4) {
+        f = GL_BGRA;
+    } else {
+        throw 2;
+    }
+
+    GLuint id = create_texture(image.cols, image.rows, image.data, nc, f);
+
+    return Hd::Texture{id, image.cols, image.rows};
+
 }
 
 }

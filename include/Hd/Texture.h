@@ -6,29 +6,58 @@ namespace Hd {
 
 class Texture {
 public:
-    Texture(const char* file, long size);
     ~Texture();
-    GLuint Id() { return m_TextureId; }
-    void Bind(unsigned int n);
+    Texture(Texture&& other);
+
+    Texture(const Texture&) = delete;
+    Texture& operator=(const Texture&) = delete;
+
+    void Bind();
+
+    GLuint Id();
     int GetWidth();
     int GetHeight();
 
+public:
+    static Texture fromFile(const char* fname);
+    static Texture fromBitMap(const void* buf, int w, int h, int nc, GLenum format);
+    static Texture fromMemory(const void* buf, int size);
+
 private:
-    GLuint m_TextureId;
-    int m_Width;
-    int m_Height;
+    Texture(GLuint id, int w, int h);
+
+    GLuint mTextureId;
+    int mWidth;
+    int mHeight;
 };
 
-inline void Texture::Bind(unsigned int n)
+inline void Texture::Bind()
 {
-    glActiveTexture(GL_TEXTURE0 + n);
-    glBindTexture(GL_TEXTURE_2D, m_TextureId);
+    glBindTexture(GL_TEXTURE_2D, mTextureId);
 }
 
-inline Texture::~Texture() { glDeleteTextures(1, &m_TextureId); }
+inline Texture::~Texture()
+{
+    if (mTextureId) glDeleteTextures(1, &mTextureId);
+}
 
-inline int Texture::GetWidth() { return m_Width; }
+inline int Texture::GetWidth() { return mWidth; }
+inline int Texture::GetHeight() { return mHeight; }
+inline GLuint Texture::Id() { return mTextureId; }
 
-inline int Texture::GetHeight() { return m_Height; }
+inline Texture::Texture(GLuint id, int w, int h)
+    : mTextureId(id)
+    , mWidth(w)
+    , mHeight(h)
+{
+}
+
+inline Texture::Texture(Texture&& other)
+{
+    mTextureId = other.mTextureId;
+    other.mTextureId = 0;
+    mWidth = other.mWidth;
+    mHeight = other.mHeight;
+}
 
 }

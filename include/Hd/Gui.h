@@ -9,6 +9,10 @@ class Gui {
 public:
     Gui();
     ~Gui();
+
+    Gui(const Gui&) = delete;
+    Gui& operator=(const Gui&) = delete;
+
     void Draw();
     FunctionList<void> Functions;
 };
