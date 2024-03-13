@@ -2,7 +2,8 @@
 
 #include <stdio.h>
 #include <functional>
-#include <list>
+#include <algorithm>
+#include <unordered_map>
 
 namespace Hd {
 
@@ -12,35 +13,31 @@ class FunctionList {
 public:
     int add(std::function<R(Args...)> f)
     {
-        mFunctions.push_back(f);
-        mIds.push_back(++id);
+        mFunctions.insert({++id, f});
         return id;
     }
 
     void remove(int id)
     {
-        auto it = mIds.begin();
-        auto itf = mFunctions.begin();
-        for (; it != mIds.end(); it++, itf++) {
-            if (*it == id) {
-                mIds.erase(it);
-                mFunctions.erase(itf);
-                return;
-            }
+        auto it = mFunctions.find(id);
+
+        if (it != mFunctions.end()) {
+            mFunctions.erase(it);
+            return;
         }
+
         printf("[FunctionList]: wrong function id\n");
     }
 
     void run(Args... args)
     {
-        for (int i = 0; i < mFunctions.size(); i++) {
-            mFunctions[i](args...);
+        for (auto f : mFunctions) {
+            f.second(args...);
         }
     }
 
 private:
-    std::list<std::function<R(Args...)>> mFunctions;
-    std::list<int> mIds;
+    std::unordered_map<int, std::function<R(Args...)>> mFunctions;
     int id = 0;
 };
 
