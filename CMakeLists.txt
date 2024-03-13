@@ -10,9 +10,10 @@ set(GLFW_INSTALL off CACHE BOOL "" FORCE)
 add_subdirectory(deps/glfw)
 add_subdirectory(deps/glad)
 add_subdirectory(deps/imgui)
-add_subdirectory(deps/stb)
 add_subdirectory(deps/glm)
 add_subdirectory(deps/myar)
+
+find_package(OpenCV REQUIRED)
 
 if(MSVC)
     add_compile_options(/W4)
@@ -31,9 +32,8 @@ set(SRC
 )
 
 add_library(Hd ${SRC})
-target_link_libraries(Hd glfw glad imgui stb glm myar)
-
-target_include_directories(Hd PUBLIC include)
+target_link_libraries(Hd glfw glad imgui glm myar ${OpenCV_LIBS})
+target_include_directories(Hd PUBLIC include ${OpenCV_INCLUDE_DIRS})
 
 include(cmake/resource.cmake)
 add_resource_dir(Hd res/)
