@@ -8,3 +8,4 @@
 #include <Hd/FrameBuffer.h>
 #include <Hd/Camera.h>
 #include <Hd/Resource.h>
+#include <Hd/Misc.h>
