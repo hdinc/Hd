@@ -5,17 +5,32 @@
 
 namespace Hd {
 
-static GLuint create_texture(int w, int h, const void* b, int c, GLenum f) {
+static GLuint create_texture(
+    int w,
+    int h,
+    const void* b,
+    int c,
+    GLenum f,
+    GLenum wrap_s = GL_REPEAT,
+    GLenum wrap_t = GL_REPEAT,
+    GLenum min_filter = GL_LINEAR_MIPMAP_LINEAR,
+    GLenum mag_filter = GL_LINEAR
+) {
 
     GLuint id;
 
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_s);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_t);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+    glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
 
     if (c == 3) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, f, GL_UNSIGNED_BYTE, b);
@@ -84,6 +99,11 @@ Texture Texture::fromMemory(const void* buf, int size) {
 
     return Hd::Texture{id, image.cols, image.rows};
 
+}
+
+Texture Texture::emptyTexture(int w, int h) {
+    GLuint id = create_texture(w, h, 0, 4, GL_RGBA);
+    return Hd::Texture{id, w, h};
 }
 
 }

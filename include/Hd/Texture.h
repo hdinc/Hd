@@ -6,8 +6,9 @@ namespace Hd {
 
 class Texture {
 public:
-    ~Texture();
+    Texture(GLuint id, int w, int h);
     Texture(Texture&& other);
+    ~Texture();
 
     Texture(const Texture&) = delete;
     Texture& operator=(const Texture&) = delete;
@@ -22,10 +23,9 @@ public:
     static Texture fromFile(const char* fname);
     static Texture fromBitMap(const void* buf, int w, int h, int nc, GLenum format);
     static Texture fromMemory(const void* buf, int size);
+    static Texture emptyTexture(int w, int h);
 
 private:
-    Texture(GLuint id, int w, int h);
-
     GLuint mTextureId;
     int mWidth;
     int mHeight;
