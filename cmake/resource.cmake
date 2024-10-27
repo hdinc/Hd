@@ -23,13 +23,36 @@ function(add_resource_dir target folder)
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
 
-    add_custom_command(
-        OUTPUT ${target}_res.o
-        DEPENDS ${pfix}res.myar
-        COMMAND ld -r -b binary -o ${target}_res.o ${pfix}res.myar
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        )
+#     if(APPLE)
+#         # gnu-ld does not support macos
+#         # macos ld does not support -b binary option
+#         # objcopy from brew generates debug symbols objcopy -I binary -O default file.bin file.o
+#         # llvm-objcopy does not support MachO ouput target
+#         add_custom_command(
+#             OUTPUT ${target}_res.s
+#             DEPENDS ${pfix}res.myar
+#             COMMAND ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/resource.sh ${pfix}res_myar ${pfix}res.myar ${target}_res.s 
+#             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#             )
+# 
+#         add_custom_command(
+#             OUTPUT ${target}_res.o
+#             DEPENDS ${target}_res.s
+#             COMMAND gcc -c ${target}_res.s -o ${target}_res.o
+#             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#             )
+# 
+#         target_sources(${target} PRIVATE ${target}_res.o)
+#     elseif(UNIX)
+        add_custom_command(
+            OUTPUT ${target}_res.o
+            DEPENDS ${pfix}res.myar
+            COMMAND ld -r -b binary -o ${target}_res.o ${pfix}res.myar
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            )
 
-    target_sources(${target} PRIVATE ${target}_res.o)
+        target_sources(${target} PRIVATE ${target}_res.o)
+#    endif()
+
 
 endfunction()

@@ -29,6 +29,7 @@ set(SRC
     src/Hd/FrameBuffer.cpp
     src/Hd/Camera.cpp
     src/Hd/Resource.cpp
+    src/Hd/Primitives.cpp
 )
 
 add_library(Hd ${SRC})
@@ -36,4 +37,4 @@ target_link_libraries(Hd glfw glad imgui glm myar ${OpenCV_LIBS})
 target_include_directories(Hd PUBLIC include ${OpenCV_INCLUDE_DIRS})
 
 include(cmake/resource.cmake)
-add_resource_dir(Hd res/)
+add_resource_dir(Hd res)
