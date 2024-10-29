@@ -12,6 +12,7 @@ add_subdirectory(deps/glad)
 add_subdirectory(deps/imgui)
 add_subdirectory(deps/glm)
 add_subdirectory(deps/myar)
+add_subdirectory(deps/stb)
 
 find_package(OpenCV REQUIRED)
 
@@ -30,10 +31,11 @@ set(SRC
     src/Hd/Camera.cpp
     src/Hd/Resource.cpp
     src/Hd/Primitives.cpp
+    src/Hd/Text.cpp
 )
 
 add_library(Hd ${SRC})
-target_link_libraries(Hd glfw glad imgui glm myar ${OpenCV_LIBS})
+target_link_libraries(Hd glfw glad imgui glm myar stb ${OpenCV_LIBS})
 target_include_directories(Hd PUBLIC include ${OpenCV_INCLUDE_DIRS})
 
 include(cmake/resource.cmake)

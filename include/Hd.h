@@ -11,3 +11,4 @@
 #include <Hd/Misc.h>
 #include <Hd/VAO.h>
 #include <Hd/Primitives.h>
+#include <Hd/Text.h>
