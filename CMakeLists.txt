@@ -30,7 +30,7 @@ set(SRC
     src/Hd/FrameBuffer.cpp
     src/Hd/Camera.cpp
     src/Hd/Resource.cpp
-    src/Hd/Primitives.cpp
+    src/Hd/Graphics2D.cpp
     src/Hd/Text.cpp
 )
 
