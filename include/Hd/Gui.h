@@ -2,12 +2,13 @@
 
 #include <imgui.h>
 #include <Hd/FunctionList.h>
+#include <Hd/Window.h>
 
 namespace Hd {
 
 class Gui {
 public:
-    Gui();
+    Gui(Hd::Window* w);
     ~Gui();
 
     Gui(const Gui&) = delete;
