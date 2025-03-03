@@ -1,10 +1,9 @@
-#include <errno.h>
 #include <stdio.h>
-#include <dirent.h>
 #include <stdlib.h>
 #include <string>
 #include <string.h>
 #include <vector>
+#include <filesystem>
 #include "myar.h"
 
 // TODO: write files first then header
@@ -74,8 +73,13 @@ std::pair<const char*, long> reader::get_file(std::string filename)
     if (!loaded)
         return { 0, 0 };
 
+    using namespace std::filesystem;
+
+    path f1 = filename;
+
     for (int i = 0; i < header.size(); i++) {
-        if (!strcmp(filename.c_str(), &buf[header[i].name_offset])) {
+        path f2 = std::string(&buf[header[i].name_offset]);
+        if (f1 == f2) {
             return { &buf[header[i].data_offset], header[i].data_size };
         }
     }
@@ -96,36 +100,28 @@ archiver::archiver() { }
 
 void archiver::add_dir(std::string dirname)
 {
-    DIR* dp = opendir(dirname.c_str());
+    using namespace std::filesystem;
 
-    if (!dp) {
-        printf("cannot open dir: %s\n", dirname.c_str());
-        printf("%s\n", strerror(errno));
+    if (!(exists(dirname) && is_directory(dirname))) {
+        printf("%s is not a directory\n", dirname.c_str());
         exit(1);
     }
 
-    dirent* dirp;
+    path base = path(dirname + "/");
+    path basename = base.parent_path().filename();
 
-    if (!dp) {
-        printf("cannot open dir\n");
-        exit(1);
-    }
-
-    while ((dirp = readdir(dp)) != NULL) {
-        if (!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
-            continue;
-        if (dirp->d_type == DT_DIR) {
-            add_dir(dirname + "/" + dirp->d_name);
-        } else if (dirp->d_type == DT_REG) {
-
+    for (const auto& e : recursive_directory_iterator(dirname)) {
+        if (e.is_regular_file()) {
             // read data
-            std::vector<char> data = read_file(dirname + "/" + dirp->d_name);
+            std::vector<char> data = read_file(e.path().string());
 
-            // add null for string files
+            // add null for text files
             data.push_back(0);
 
-            files.push_back({ dirname + "/" + dirp->d_name, data });
-            printf("%s\n", files[files.size() - 1].name.data());
+            path p = basename / relative(e.path(), dirname);
+
+            files.push_back({ p.string(), data });
+            printf("%s\n", files.back().name.c_str());
         }
     }
 }
@@ -148,7 +144,7 @@ void archiver::write(std::string file)
     unsigned long name_size = 0;
 
     for (int i = 0; i < files.size(); i++) {
-        header.push_back({ 0, 0, files[i].data.size() });
+        header.push_back({ 0, 0, static_cast<unsigned long>(files[i].data.size()) });
         name.push_back(files[i].name);
         data.push_back(files[i].data);
 
