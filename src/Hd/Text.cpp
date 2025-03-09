@@ -12,6 +12,7 @@ namespace Hd {
 
 Text::Text(int size, const char* font)
     : shader(Resource::getLibRes("res/text/text_vertex.glsl").first, Resource::getLibRes("res/text/text_texture.glsl").first)
+    , vbo(GL_ARRAY_BUFFER)
     , size(size)
 {
 
@@ -24,11 +25,8 @@ Text::Text(int size, const char* font)
         };
     // clang-format on
 
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(square), square, GL_STATIC_DRAW);
+    vao.Bind();
+    vbo.Data(square, sizeof(square));
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
@@ -43,25 +41,36 @@ Text::Text(int size, const char* font)
     glGenTextures(1, &font_texture);
     glBindTexture(GL_TEXTURE_2D, font_texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, font_texture_size, font_texture_size, 0, GL_RED, GL_UNSIGNED_BYTE, temp_bitmap);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 Text::~Text()
 {
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo);
     glDeleteTextures(1, &font_texture);
 }
 
-void Text::draw(glm::vec2 fb_size, glm::vec2 loc)
+void Text::draw(glm::mat4 vp, glm::vec2 fbsize, glm::vec2 fbscale, glm::vec2 pos, float height, glm::vec3 color, align align)
 {
     shader.Bind();
     glUniform3fv(6, 1, &color.x);
 
-    for (auto i = 0ul; i < buffer.size(); i++) {
+    switch (align) {
+    case align::center:
+        pos -= 2.0f * box / (fbsize * fbscale);
+        break;
+    case align::left:
+        break;
+    case align::right:
+        pos.x -= 2.0f * box.x / (fbsize * fbscale).x;
+        break;
+    }
 
-        glm::vec2 size = sizes[i] / fb_size;
-        glm::vec2 dloc = loc + dlocs[i] / fb_size;
+    for (auto i = 0ul; i < text.size(); i++) {
+
+        glm::vec2 size = (sizes[i] / (fbsize * fbscale)) / height;
+        glm::vec2 dloc = pos + dlocs[i] / (fbsize * fbscale);
 
         glm::mat4 m(1.0f);
         m = glm::translate(m, { dloc, 0.0f });
@@ -70,20 +79,18 @@ void Text::draw(glm::vec2 fb_size, glm::vec2 loc)
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glBindTexture(GL_TEXTURE_2D, font_texture);
-        glBindVertexArray(vao);
+        vao.Bind();
 
         glUniform2fv(2, 4, &uniforms[i][0]);
-        glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(m));
-
-        glBindVertexArray(vao);
+        glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(vp * m));
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     }
 }
 
-void Text::update(std::string text)
+void Text::set_text(std::string t)
 {
-    buffer = std::move(text);
+    text = std::move(t);
 
     dlocs.clear();
     sizes.clear();
@@ -92,11 +99,11 @@ void Text::update(std::string text)
     float cposx = 0;
     float cposy = 0;
 
-    mbufsize = glm::vec2(0);
+    box = glm::vec2(0);
 
-    for (auto i = 0ul; i < buffer.size(); i++) {
+    for (auto i = 0ul; i < text.size(); i++) {
 
-        unsigned char c = buffer[i];
+        unsigned char c = text[i];
 
         int ix;
 
@@ -127,14 +134,10 @@ void Text::update(std::string text)
         dlocs.push_back(glm::vec2(q.x1 + q.x0, -q.y1 - q.y0));
         sizes.push_back(glm::vec2(q.x1 - q.x0, q.y1 - q.y0));
 
-        mbufsize.x = cposx > mbufsize.x ? cposx : mbufsize.x;
-        mbufsize.y = cposy + size;
+        box.x = cposx > box.x ? cposx : box.x;
+        box.y = cposy + size;
     }
 
 }
-
-glm::vec2 Text::getSize() { return mbufsize; }
-
-void Text::set_color(glm::vec3 c) { color = c; }
 
 }
