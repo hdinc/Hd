@@ -16,19 +16,12 @@ public:
     Text(int pixel_size, const char* font=0);
     ~Text();
 
-    enum class align {
-        left,
-        center,
-        right
-    };
-
     void set_text(std::string t);
-    void draw(glm::mat4 vp, glm::vec2 fbsize, glm::vec2 fbscale, glm::vec2 pos, float height, glm::vec3 color = {0,0,1}, align align = align::left);
+    void draw(glm::mat4 vp, glm::vec2 pos, float height, glm::vec3 color = {1,1,1});
+    std::pair<glm::vec2,glm::vec2> get_box();
 
 
-    glm::vec2 box;
-
-private:
+    private:
     Hd::Shader shader;
     GLuint font_texture;
     Hd::VBO vbo;
@@ -44,6 +37,8 @@ private:
     std::vector<std::array<float, 8>> uniforms;
     std::vector<glm::vec2> dlocs;
     std::vector<glm::vec2> sizes;
+
+    std::pair<glm::vec2, glm::vec2> box;
 
 };
 

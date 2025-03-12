@@ -16,12 +16,14 @@ Text::Text(int size, const char* font)
     , size(size)
 {
 
+    box = {{0, 0}, {0, 0}};
+
     // clang-format off
     float square[] = {
-        -1.f,  1.f,
-         1.f,  1.f,
-        -1.f, -1.f,
-         1.f, -1.f,
+        -0.5f,  0.5f,
+         0.5f,  0.5f,
+        -0.5f, -0.5f,
+         0.5f, -0.5f,
         };
     // clang-format on
 
@@ -51,30 +53,19 @@ Text::~Text()
     glDeleteTextures(1, &font_texture);
 }
 
-void Text::draw(glm::mat4 vp, glm::vec2 fbsize, glm::vec2 fbscale, glm::vec2 pos, float height, glm::vec3 color, align align)
+void Text::draw(glm::mat4 vp, glm::vec2 pos, float height, glm::vec3 color)
 {
     shader.Bind();
     glUniform3fv(6, 1, &color.x);
 
-    switch (align) {
-    case align::center:
-        pos -= 2.0f * box / (fbsize * fbscale);
-        break;
-    case align::left:
-        break;
-    case align::right:
-        pos.x -= 2.0f * box.x / (fbsize * fbscale).x;
-        break;
-    }
-
     for (auto i = 0ul; i < text.size(); i++) {
 
-        glm::vec2 size = (sizes[i] / (fbsize * fbscale)) / height;
-        glm::vec2 dloc = pos + dlocs[i] / (fbsize * fbscale);
+        glm::vec2 dsize = sizes[i] * height;
+        glm::vec2 dloc = pos + dlocs[i] * height;
 
         glm::mat4 m(1.0f);
         m = glm::translate(m, { dloc, 0.0f });
-        m = glm::scale(m, { size, 1.0f });
+        m = glm::scale(m, { dsize, 1.0f });
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -99,7 +90,7 @@ void Text::set_text(std::string t)
     float cposx = 0;
     float cposy = 0;
 
-    box = glm::vec2(0);
+    box = {{0, 0}, {0, 0}};
 
     for (auto i = 0ul; i < text.size(); i++) {
 
@@ -122,22 +113,37 @@ void Text::set_text(std::string t)
 
         std::array<float, 8> uniform;
         uniform[0] = q.s0;
-        uniform[1] = q.t0;
+        uniform[1] = q.t1;
         uniform[2] = q.s1;
-        uniform[3] = q.t0;
+        uniform[3] = q.t1;
         uniform[4] = q.s0;
-        uniform[5] = q.t1;
+        uniform[5] = q.t0;
         uniform[6] = q.s1;
-        uniform[7] = q.t1;
+        uniform[7] = q.t0;
 
         uniforms.push_back(uniform);
-        dlocs.push_back(glm::vec2(q.x1 + q.x0, -q.y1 - q.y0));
-        sizes.push_back(glm::vec2(q.x1 - q.x0, q.y1 - q.y0));
+        dlocs.push_back(glm::vec2((q.x1 + q.x0) / (2.0f * float(size)), -(q.y1 + q.y0) / (2.0f * float(size))));
+        sizes.push_back(glm::vec2((q.x1 - q.x0) / float(size), (q.y0 - q.y1) / float(size)));
 
-        box.x = cposx > box.x ? cposx : box.x;
-        box.y = cposy + size;
+        if (i == 0) {
+            box.first = {q.x0, -q.y0};
+            box.second = {q.x1, -q.y1};
+        } else {
+            if ( q.x0 < box.first.x) box.first.x  =  q.x0;
+            if (-q.y0 > box.first.y) box.first.y  = -q.y0;
+            if ( q.x1 > box.second.x) box.second.x =  q.x1;
+            if (-q.y1 < box.second.y) box.second.y = -q.y1;
+        }
+
     }
 
+    box.first /= float(size);
+    box.second /= float(size);
+
+}
+
+std::pair<glm::vec2, glm::vec2> Text::get_box() {
+    return box;
 }
 
 }

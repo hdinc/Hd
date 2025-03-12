@@ -36,7 +36,7 @@ void Graphics2D::line(const glm::mat4& vp, glm::vec2 p1, glm::vec2 p2)
     glUniform2fv(1, 2, &p[0].x);
 
     glBindVertexArray(vao);
-    glDrawArrays(GL_LINES, 0, 4);
+    glDrawArrays(GL_LINES, 0, 2);
 }
 
 void Graphics2D::rect(const glm::mat4& vp, glm::vec2 p1, glm::vec2 p2, bool filled)
