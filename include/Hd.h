@@ -11,5 +11,6 @@
 #include <Hd/Misc.h>
 #include <Hd/VAO.h>
 #include <Hd/VBO.h>
+#include <Hd/SSBO.h>
 #include <Hd/Graphics2D.h>
 #include <Hd/Text.h>
