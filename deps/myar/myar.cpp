@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -26,13 +27,11 @@ void reader::load(const char* buf, long size)
     loaded = true;
 
     if (size < sizeof(magic) + sizeof(long)) {
-        printf("this is not a MYAR archive\n");
-        exit(1);
+        throw std::runtime_error("this is not a MYAR archive");
     }
 
     if (memcmp(buf, &magic, 4)) {
-        printf("this is not a MYAR archive\n");
-        exit(1);
+        throw std::runtime_error("this is not a MYAR archive");
     }
 
     num_file = *(long*)&buf[4];
