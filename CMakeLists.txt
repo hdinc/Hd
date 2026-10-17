@@ -18,6 +18,9 @@ set(SRC
     src/Hd/Gui.cpp
     src/Hd/FrameBuffer.cpp
     src/Hd/Camera.cpp
+    src/Hd/CamCtrl.cpp
+    src/Hd/CamCtrl2D.cpp
+    src/Hd/CamCtrl3D.cpp
     src/Hd/Resource.cpp
     src/Hd/Graphics2D.cpp
     src/Hd/Text.cpp

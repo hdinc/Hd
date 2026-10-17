@@ -94,13 +94,13 @@ inline void Window::SwapBuffers()
 
 inline void Window::PollEvents()
 {
-    waitFpsLimit();
+    // waitFpsLimit();
     glfwPollEvents();
 }
 
 inline void Window::WaitEvents()
 {
-    waitFpsLimit();
+    // waitFpsLimit();
     glfwWaitEvents();
 }
 

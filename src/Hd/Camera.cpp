@@ -1,190 +1,140 @@
 #include <Hd/Camera.h>
-#include <Hd/Window.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <functional>
-
 namespace Hd {
 
-extern Window* gWindow;
-
 Camera::Camera()
+    : pos { 0.0f, -10.0f, 0.0f }
+    , dir { 1.0f, 0.0f, 0.0f, 0.0f }
+    , fbsize { 1.0f, 1.0f }
 {
-    auto s = gWindow->getFramebufferSize();
-    onFramebufferSizeChange(s.x, s.y);
+    setPersp();
+    recalcV();
+}
 
-    using namespace std::placeholders;
-    auto f = std::bind(&Camera::onFramebufferSizeChange, this, _1, _2);
-    ids[0] = gWindow->FramebufferSizeCb.add(f);
+void Camera::recalcV()
+{
+    auto m = glm::mat4_cast(dir);
+    view = glm::lookAt(pos, pos + glm::vec3(m[1]), glm::vec3(m[2]));
 
-    calculateView();
+    // orthographic zoom depends on pos.z
+    if (ptype == Orthogonal)
+        recalcP();
+    else
+        recalcVP();
+}
 
-    if (mProjectionType == projectionType::perspective) {
-        setPerspective(mPerspectiveFOV);
+void Camera::recalcP()
+{
+    float aspect = fbsize.y / fbsize.x;
+    if (ptype == Perspective) {
+        projection = glm::perspective(glm::radians(fov), 1.0f / aspect, 0.1f, 1000.0f);
     } else {
-        setOrthographic();
+        // pos.z is the half height of the visible area
+        projection = glm::ortho(-pos.z / aspect, pos.z / aspect, -pos.z, pos.z, -1000.0f, 1000.0f);
     }
+
+    recalcVP();
 }
 
-Camera::~Camera()
+void Camera::recalcVP()
 {
-    if (inputEnabled) {
-        disableInput();
-    }
-    gWindow->FramebufferSizeCb.remove(ids[0]);
+    vp = projection * view;
 }
 
-void Camera::onScroll(double dx, double dy)
+void Camera::setOrtho()
 {
-    (void)dx;
-
-    mPolarLoc.x *= (dy < 0) ? 1.1 : 1 / 1.1;
-    // auto loc = glm::vec4(gWindow->getMousePos(), 0.0f, 0.0f) * glm::inverse(mView);
-    mLoc.z *= (dy < 0) ? 1.1 : 1 / 1.1;
-    calculateView();
-    // auto locn = glm::vec4(gWindow->getMousePos(), 0.0f, 0.0f) * glm::inverse(mView);
-    // mLoc.x += (locn - loc).x;
-    // mLoc.x += (locn - loc).x;
-    // calculateView();
-    calculateVP();
+    ptype = Orthogonal;
+    recalcP();
 }
 
-void Camera::onFramebufferSizeChange(int x, int y)
+void Camera::setPersp(float fov)
 {
-    (void)x;
-    (void)y;
-
-    mProjectionScale = gWindow->getFramebufferScale();
-    if (mProjectionType == projectionType::perspective) {
-        setPerspective(mPerspectiveFOV);
-    } else {
-        setOrthographic();
-    }
-    calculateVP();
+    this->fov = fov;
+    ptype = Perspective;
+    recalcP();
 }
 
-void Camera::onMouseMovement(double x, double y)
+void Camera::rotateXZ(float ax, float az)
 {
-    (void)x;
-    (void)y;
+    glm::mat4 d = glm::mat4_cast(dir);
 
-    auto pos = gWindow->getMousePos();
-    auto a = pos - mDragStart;
-    mDragStart = pos;
+    glm::mat4 m { 1.0f };
 
-    a /= mProjectionScale;
+    m = glm::rotate(m, ax, { 0, 0, 1 });
+    m = glm::rotate(m, az, glm::vec3(d[0]));
 
-    if (mDrag) {
-        mPolarLoc.y -= 2 * a.y;
-        mPolarLoc.z -= 2 * a.x;
-        mLoc -= mLoc.z * glm::vec3(a, 0.0f);
-        calculateView();
-        calculateVP();
-    }
+    dir *= glm::quat_cast(m);
+
+    recalcV();
 }
 
-void Camera::onMouseButtonClick(int button, int action, int mods)
+void Camera::rotate(glm::vec3 ang)
 {
-    (void)mods;
-
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS) {
-        mDrag = true;
-        if (mProjectionType == projectionType::perspective)
-            glfwSetInputMode(gWindow->Id(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        mDragStart = gWindow->getMousePos();
-    }
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
-        mDrag = false;
-        if (mProjectionType == projectionType::perspective)
-            glfwSetInputMode(gWindow->Id(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    }
+    dir *= glm::quat(glm::radians(ang));
+    recalcV();
 }
 
-void Camera::enableInput()
+void Camera::rotateA(glm::vec2 ang, glm::vec3 p, glm::vec3 up)
 {
-    inputEnabled = true;
 
-    using namespace std::placeholders;
-    auto f1 = std::bind(&Camera::onScroll, this, _1, _2);
-    auto f2 = std::bind(&Camera::onMouseMovement, this, _1, _2);
-    auto f3 = std::bind(&Camera::onMouseButtonClick, this, _1, _2, _3);
+    auto d = glm::normalize(pos - p);
+    auto r = glm::cross(d, up);
 
-    ids[1] = gWindow->ScrollCb.add(f1);
-    ids[2] = gWindow->CursorPosCb.add(f2);
-    ids[3] = gWindow->MouseButtonCb.add(f3);
+    glm::mat4 m { 1.0f };
+    m = glm::rotate(m, ang.x, up);
+    m = glm::rotate(m, ang.y, r);
+
+    dir = glm::quat(m) * dir;
+    pos = glm::quat(m) * (pos - p) + p;
+
+    recalcV();
 }
 
-void Camera::disableInput()
+void Camera::move(glm::vec3 d)
 {
-    inputEnabled = false;
-    gWindow->ScrollCb.remove(ids[1]);
-    gWindow->CursorPosCb.remove(ids[2]);
-    gWindow->MouseButtonCb.remove(ids[3]);
+    pos += d;
+
+    recalcV();
 }
 
-void Camera::setOrthographic()
+void Camera::moveC(glm::vec3 d)
 {
-    // TODO: fix me
-    mProjectionType = projectionType::orthographic;
-
-    glm::vec2 v = 1.0f / mProjectionScale;
-
-    mProjection = glm::ortho(-v.x, v.x, -v.y, v.y, -100.f, 100.f);
-    calculateVP();
+    d = glm::vec3 { -d.x, -d.z, d.y };
+    auto m = glm::mat4_cast(dir);
+    pos += glm::vec3 { m * glm::vec4 { d, 1.0f } };
+    recalcV();
 }
 
-void Camera::setPerspective(float fov)
+void Camera::setPos(glm::vec3 p)
 {
-    mProjectionType = projectionType::perspective;
-    mPerspectiveFOV = fov;
-    float aspect = mProjectionScale.y / mProjectionScale.x;
-    mProjection = glm::perspective(fov, aspect, 0.01f, 100000.0f);
-    calculateVP();
+    pos = p;
+    recalcV();
 }
 
-void Camera::calculateView()
+void Camera::setDir(glm::quat d)
 {
-    /* mView = glm::lookAt(toEuclidean(mPolarLoc), toEuclidean(mPolarTarget), mUp); */
-
-    if (mProjectionType == projectionType::perspective) {
-        glm::mat4 ViewTranslate = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -mPolarLoc.x));
-        glm::mat4 ViewRotateX = glm::rotate(ViewTranslate, this->mPolarLoc.y, glm::vec3(1.f, 0.f, 0.f));
-        mView = glm::rotate(ViewRotateX, -this->mPolarLoc.z, glm::vec3(0.f, 1.f, 0.f));
-    } else {
-        auto d = mLoc - mTarget;
-        mView = glm::mat4(1.0f);
-        mView = glm::scale(mView, glm::vec3(1.0f / d.z));
-        mView = glm::translate(mView, glm::vec3(-d.x, -d.y, 0.0f));
-    }
+    dir = d;
+    recalcV();
 }
 
-void Camera::calculateVP()
+void Camera::setDir(float angx, float angz)
 {
-    mVP = mProjection * mView;
+    glm::mat4 m { 1.0f };
+    m = glm::rotate(m, angx, { 1, 0, 0 });
+    m = glm::rotate(m, angz, { 0, 0, 1 });
+
+    dir = glm::quat_cast(m);
+
+    recalcV();
 }
 
-glm::vec3 Camera::toEuclidean(glm::vec3 v)
+void Camera::setfbsize(glm::vec2 fb)
 {
-    // TODO: why?
-    glm::vec3 r;
-    r.x = v.x * cos(v.y) * sin(v.z);
-    r.y = v.x * sin(v.y);
-    r.z = v.x * cos(v.y) * cos(v.z);
-
-    return r;
-}
-
-glm::vec3 Camera::toPolar(glm::vec3 v)
-{
-    // TODO: fix zero condition better way
-    glm::vec3 r;
-    r.x = glm::length(v);
-    r.y = atan(glm::length(glm::vec2(v.x, v.z)) / v.y);
-    r.z = v.z == 0 ? 0 : atan(v.x / v.z);
-
-    return r;
+    fbsize = fb;
+    recalcP();
 }
 
 }

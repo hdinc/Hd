@@ -7,6 +7,8 @@
 #include <Hd/Gui.h>
 #include <Hd/FrameBuffer.h>
 #include <Hd/Camera.h>
+#include <Hd/CamCtrl2D.h>
+#include <Hd/CamCtrl3D.h>
 #include <Hd/Resource.h>
 #include <Hd/Misc.h>
 #include <Hd/VAO.h>

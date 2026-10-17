@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <thread>
+#include <stdexcept>
 
 #include <Hd/Window.h>
 #include <Hd/FunctionList.h>
@@ -33,7 +34,8 @@ Window::Window()
 #ifndef NDEBUG
     glfwSetErrorCallback(glfw_error_callback);
 #endif
-    glfwInit();
+    if (!glfwInit())
+        throw std::runtime_error("[WINDOW]: failed to initialize glfw");
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -48,6 +50,10 @@ Window::Window()
 #endif
 
     mWindowId = glfwCreateWindow(mSize[0], mSize[1], mName, NULL, NULL);
+    if (!mWindowId) {
+        glfwTerminate();
+        throw std::runtime_error("[WINDOW]: failed to create window / OpenGL 4.5 context");
+    }
 
     glfwSetCursorPosCallback(mWindowId, cursor_position_callback);
     glfwSetKeyCallback(mWindowId, key_callback);

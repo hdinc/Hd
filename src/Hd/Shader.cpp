@@ -7,7 +7,6 @@
     #define alloca _alloca
 #endif
 
-static const char* GetFile(const char* filename);
 
 namespace Hd {
 
@@ -122,23 +121,4 @@ void Shader::CheckError(GLuint id, GLenum pname)
     }
 }
 
-}
-
-static const char* GetFile(const char* filename)
-{
-    char* buffer = 0;
-    long length;
-    FILE* f = fopen(filename, "rb");
-    if (!f) {
-        fprintf(stderr, "cannot open %s\n", filename);
-        exit(1);
-    }
-    fseek(f, 0, SEEK_END);
-    length = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    buffer = (char*)malloc(length + 1);
-    fread(buffer, 1, length, f);
-    fclose(f);
-    buffer[length] = '\0';
-    return buffer;
 }

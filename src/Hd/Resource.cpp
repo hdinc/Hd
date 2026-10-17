@@ -1,5 +1,6 @@
 #include <Hd/Resource.h>
 #include <myar.h>
+#include <stdexcept>
 
 __attribute__((weak)) char _binary_exeres_myar_start = 0;
 __attribute__((weak)) char _binary_exeres_myar_end   = 0;
@@ -19,7 +20,10 @@ namespace Resource {
             libreader.load(&_binary_libres_myar_start, &_binary_libres_myar_end - &_binary_libres_myar_start);
         }
 
-        return libreader.get_file(file);
+        auto r = libreader.get_file(file);
+        if (r.first) {
+            return r;
+        } else throw std::runtime_error("getLibRes: File not found : " + std::string(file));
     }
 
     std::pair<const char*, long> getExeRes(const char* file)
@@ -28,7 +32,10 @@ namespace Resource {
             exereader.load(&_binary_exeres_myar_start, &_binary_exeres_myar_end - &_binary_exeres_myar_start);
         }
 
-        return exereader.get_file(file);
+        auto r = exereader.get_file(file);
+        if (r.first) {
+            return r;
+        } else throw std::runtime_error("getExeRes: File not found : " + std::string(file));
     }
 
 }

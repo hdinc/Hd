@@ -12,7 +12,6 @@ namespace Hd {
 
 Text::Text(int size, const char* font)
     : shader(Resource::getLibRes("res/text/text_vertex.glsl").first, Resource::getLibRes("res/text/text_texture.glsl").first)
-    , vbo(GL_ARRAY_BUFFER)
     , size(size)
 {
 
@@ -28,7 +27,8 @@ Text::Text(int size, const char* font)
     // clang-format on
 
     vao.Bind();
-    vbo.Data(square, sizeof(square));
+    vbo.Bind(GL_ARRAY_BUFFER);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(square), square, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
