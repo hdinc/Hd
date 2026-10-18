@@ -16,3 +16,5 @@
 #include <Hd/SSBO.h>
 #include <Hd/Graphics2D.h>
 #include <Hd/Text.h>
+#include <Hd/Font.h>
+#include <Hd/Renderer2D.h>

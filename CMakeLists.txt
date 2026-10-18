@@ -24,6 +24,8 @@ set(SRC
     src/Hd/Resource.cpp
     src/Hd/Graphics2D.cpp
     src/Hd/Text.cpp
+    src/Hd/Font.cpp
+    src/Hd/Renderer2D.cpp
 )
 
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
