@@ -2,8 +2,8 @@
 #include <myar.h>
 #include <stdexcept>
 
-__attribute__((weak)) char _binary_exeres_myar_start = 0;
-__attribute__((weak)) char _binary_exeres_myar_end   = 0;
+extern char _binary_exeres_myar_start;
+extern char _binary_exeres_myar_end;
 
 extern char _binary_libres_myar_start;
 extern char _binary_libres_myar_end;

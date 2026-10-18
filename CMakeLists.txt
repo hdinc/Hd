@@ -22,6 +22,7 @@ set(SRC
     src/Hd/CamCtrl2D.cpp
     src/Hd/CamCtrl3D.cpp
     src/Hd/Resource.cpp
+    src/Hd/ResourceDefault.cpp
     src/Hd/Graphics2D.cpp
     src/Hd/Text.cpp
     src/Hd/Font.cpp
