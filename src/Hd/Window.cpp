@@ -4,9 +4,23 @@
 #include <chrono>
 #include <thread>
 #include <stdexcept>
+#include <algorithm>
 
 #include <Hd/Window.h>
 #include <Hd/FunctionList.h>
+
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#ifndef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
+#define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION 0x00000002
+#endif
+#endif
 
 static void glfw_error_callback(int error, const char* description);
 static void GLAPIENTRY messagecallback(
@@ -120,20 +134,61 @@ void Window::VSync(bool b)
     glfwSwapInterval(mVsync ? 1 : 0);
 }
 
-void Window::waitFpsLimit()
+// sleeps until the given glfw time. the os sleep stops about a millisecond
+// early and the rest is spun, since wakeups are not precise enough to hit the
+// deadline otherwise.
+static void sleepUntil(double deadline)
 {
-    // TODO: this doesnt work on windows. find a better way to limit fps;
-    static double oldtime = 0;
-    double t;
-    t = glfwGetTime() - oldtime - 1.0 / (double)mFpsLimit;
-    if (t < 0)
-        std::this_thread::sleep_for(std::chrono::microseconds((int)(-t * 1e6)));
-    oldtime = glfwGetTime();
+#ifdef _WIN32
+    // sleep_for uses the default ~15.6 ms timer resolution on windows, which is
+    // useless for frame pacing. a high resolution waitable timer (windows 10
+    // 1803+) wakes up within a fraction of a millisecond.
+    static HANDLE timer = [] {
+        HANDLE h = CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
+        if (!h)
+            h = CreateWaitableTimerExW(nullptr, nullptr, 0, TIMER_ALL_ACCESS);
+        return h;
+    }();
+#endif
+
+    for (;;) {
+        double left = deadline - glfwGetTime();
+        if (left <= 0)
+            return;
+        if (left > 2e-3) {
+#ifdef _WIN32
+            // negative due time is relative, in 100 ns units
+            LARGE_INTEGER due;
+            due.QuadPart = -(LONGLONG)((left - 1e-3) * 1e7);
+            if (timer && SetWaitableTimer(timer, &due, 0, nullptr, nullptr, FALSE))
+                WaitForSingleObject(timer, INFINITE);
+            else
+                Sleep(1);
+#else
+            std::this_thread::sleep_for(std::chrono::duration<double>(left - 1e-3));
+#endif
+        } else {
+            std::this_thread::yield();
+        }
+    }
 }
 
+void Window::waitFpsLimit()
+{
+    if (mFpsLimit <= 0)
+        return;
+
+    // frames are scheduled against the previous deadline so the error of each
+    // wait doesn't add up. a frame that is already late resets the schedule
+    // instead of rushing the following ones.
+    mNextFrame = std::max(mNextFrame + 1.0 / mFpsLimit, glfwGetTime());
+    sleepUntil(mNextFrame);
+}
+
+// limits the frame rate to a frames per second. 0 removes the limit.
 void Window::fpsLimit(int a)
 {
-    if (a >= 10)
+    if (a == 0 || a >= 10)
         mFpsLimit = a;
     else
         printf("[WINDOW]:cant limit fps under 10\n");

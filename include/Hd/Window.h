@@ -52,7 +52,8 @@ private:
     GLFWwindow* mWindowId;
     bool mVsync = false;
     bool hasGui = false;
-    int mFpsLimit = 60;
+    int mFpsLimit = 0;
+    double mNextFrame = 0;
     int mFrame = 0;
     glm::vec2 mFramebufferSize;
     glm::vec2 mFramebufferScale;
@@ -94,13 +95,13 @@ inline void Window::SwapBuffers()
 
 inline void Window::PollEvents()
 {
-    // waitFpsLimit();
+    waitFpsLimit();
     glfwPollEvents();
 }
 
 inline void Window::WaitEvents()
 {
-    // waitFpsLimit();
+    waitFpsLimit();
     glfwWaitEvents();
 }
 
