@@ -132,6 +132,40 @@ void Window::VSync(bool b)
 {
     mVsync = b;
     glfwSwapInterval(mVsync ? 1 : 0);
+    mVsyncFallback = 0;
+    mVsyncFrames = 0;
+}
+
+// some drivers accept a swap interval but never wait, software rendering on
+// a vnc or headless x server has no vblank. the first frames after vsync is
+// enabled are timed and if they come much faster than the monitor refreshes,
+// the frame rate is limited to the refresh rate instead.
+void Window::checkVsync()
+{
+    if (!mVsync || mFpsLimit > 0 || mVsyncFallback || mVsyncFrames < 0)
+        return;
+
+    // skip the first frames, they include startup work
+    const int skip = 10, measure = 60;
+    if (mVsyncFrames++ == skip)
+        mVsyncStart = glfwGetTime();
+    if (mVsyncFrames < skip + measure)
+        return;
+
+    int refresh = 60;
+    if (GLFWmonitor* m = glfwGetPrimaryMonitor())
+        if (const GLFWvidmode* mode = glfwGetVideoMode(m))
+            if (mode->refreshRate >= 30 && mode->refreshRate <= 360)
+                refresh = mode->refreshRate;
+
+    double interval = (glfwGetTime() - mVsyncStart) / measure;
+    if (interval < 0.7 / refresh) {
+        mVsyncFallback = refresh;
+        printf("[WINDOW]:vsync doesn't wait, limiting fps to %d\n", refresh);
+        fflush(stdout);
+    }
+    // measured once
+    mVsyncFrames = -1;
 }
 
 // sleeps until the given glfw time. the os sleep stops about a millisecond
@@ -175,13 +209,14 @@ static void sleepUntil(double deadline)
 
 void Window::waitFpsLimit()
 {
-    if (mFpsLimit <= 0)
+    int limit = mFpsLimit > 0 ? mFpsLimit : mVsyncFallback;
+    if (limit <= 0)
         return;
 
     // frames are scheduled against the previous deadline so the error of each
     // wait doesn't add up. a frame that is already late resets the schedule
     // instead of rushing the following ones.
-    mNextFrame = std::max(mNextFrame + 1.0 / mFpsLimit, glfwGetTime());
+    mNextFrame = std::max(mNextFrame + 1.0 / limit, glfwGetTime());
     sleepUntil(mNextFrame);
 }
 

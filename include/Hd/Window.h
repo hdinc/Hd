@@ -54,6 +54,11 @@ private:
     bool hasGui = false;
     int mFpsLimit = 0;
     double mNextFrame = 0;
+    // vsync that doesn't block (no vblank, e.g. a vnc display) is replaced by
+    // the fps limit at the refresh rate
+    int mVsyncFallback = 0;
+    int mVsyncFrames = 0;
+    double mVsyncStart = 0;
     int mFrame = 0;
     glm::vec2 mFramebufferSize;
     glm::vec2 mFramebufferScale;
@@ -64,6 +69,7 @@ private:
     static glProfile mGlProfile;
 
     void waitFpsLimit();
+    void checkVsync();
 
     static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
     static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -91,6 +97,7 @@ inline void Window::SwapBuffers()
 {
     glfwSwapBuffers(mWindowId);
     mFrame++;
+    checkVsync();
 }
 
 inline void Window::PollEvents()
