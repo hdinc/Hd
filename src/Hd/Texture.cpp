@@ -1,6 +1,6 @@
 #include <glad/glad.h>
 #include <Hd/Texture.h>
-#include <opencv2/opencv.hpp>
+#include <stb/stb_image.h>
 #include <stdio.h>
 
 namespace Hd {
@@ -43,29 +43,29 @@ static GLuint create_texture(
     return id;
 }
 
-Texture Texture::fromFile(const char* fname) {
+// pixels from stb_image as a texture: rgb or rgba, other images converted
+// to rgba. stb keeps the first row on top like the textures were before.
+static Texture from_stbi(stbi_uc* pixels, int w, int h, int nc) {
 
-    auto image = cv::imread(fname, cv::IMREAD_UNCHANGED);
-
-    if (image.empty()) {
+    if (!pixels) {
         throw 1;
     }
 
-    int nc = image.channels();
+    GLuint id = create_texture(w, h, pixels, nc, nc == 3 ? GL_RGB : GL_RGBA);
+    stbi_image_free(pixels);
 
-    GLenum f;
+    return Hd::Texture{id, w, h};
+}
 
-    if (nc == 3) {
-        f = GL_BGR;
-    } else if (nc == 4) {
-        f = GL_BGRA;
-    } else {
-        throw 2;
+Texture Texture::fromFile(const char* fname) {
+
+    int w, h, nc;
+    if (!stbi_info(fname, &w, &h, &nc)) {
+        throw 1;
     }
-
-    GLuint id = create_texture(image.cols, image.rows, image.data, nc, f);
-
-    return Hd::Texture{id, image.cols, image.rows};
+    int want = nc == 3 ? 3 : 4;
+    auto pixels = stbi_load(fname, &w, &h, &nc, want);
+    return from_stbi(pixels, w, h, want);
 }
 
 Texture Texture::fromBitMap(const void* buf, int w, int h, int nc, GLenum format) {
@@ -75,30 +75,14 @@ Texture Texture::fromBitMap(const void* buf, int w, int h, int nc, GLenum format
 
 Texture Texture::fromMemory(const void* buf, int size) {
 
-    cv::_InputArray a(static_cast<const char*>(buf), size);
-
-    auto image = cv::imdecode(a, cv::IMREAD_UNCHANGED);
-
-    if (image.empty()) {
+    auto data = static_cast<const stbi_uc*>(buf);
+    int w, h, nc;
+    if (!stbi_info_from_memory(data, size, &w, &h, &nc)) {
         throw 1;
     }
-
-    int nc = image.channels();
-
-    GLenum f;
-
-    if (nc == 3) {
-        f = GL_BGR;
-    } else if (nc == 4) {
-        f = GL_BGRA;
-    } else {
-        throw 2;
-    }
-
-    GLuint id = create_texture(image.cols, image.rows, image.data, nc, f);
-
-    return Hd::Texture{id, image.cols, image.rows};
-
+    int want = nc == 3 ? 3 : 4;
+    auto pixels = stbi_load_from_memory(data, size, &w, &h, &nc, want);
+    return from_stbi(pixels, w, h, want);
 }
 
 Texture Texture::emptyTexture(int w, int h) {

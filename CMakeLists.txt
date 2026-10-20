@@ -4,7 +4,6 @@ project(Hd VERSION 0.1.0)
 
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
-find_package(OpenCV REQUIRED)
 
 add_subdirectory(deps/glad)
 add_subdirectory(deps/imgui)
@@ -47,10 +46,9 @@ target_include_directories(Hd
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include/Hd-${PROJECT_VERSION}/include>
-        ${OpenCV_INCLUDE_DIRS}
 )
 
-target_link_libraries(Hd PUBLIC glad imgui myar stb glfw glm::glm ${OpenCV_LIBS})
+target_link_libraries(Hd PUBLIC glad imgui myar stb glfw glm::glm)
 
 set_target_properties(Hd PROPERTIES
     OUTPUT_NAME Hd-${PROJECT_VERSION}
