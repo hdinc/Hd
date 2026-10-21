@@ -1,4 +1,5 @@
-#version 450 core
+#version 330 core
+#extension GL_ARB_explicit_uniform_location : require
 
 in vec2 texcoord;
 out vec4 fragcolor;

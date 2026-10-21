@@ -51,8 +51,12 @@ Window::Window()
     if (!glfwInit())
         throw std::runtime_error("[WINDOW]: failed to initialize glfw");
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    // drivers give the newest version they support, 3.3 is the minimum
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+#ifdef __APPLE__
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, true);
+#endif
     if (mGlProfile == glProfile::core)
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     else
@@ -66,7 +70,7 @@ Window::Window()
     mWindowId = glfwCreateWindow(mSize[0], mSize[1], mName, NULL, NULL);
     if (!mWindowId) {
         glfwTerminate();
-        throw std::runtime_error("[WINDOW]: failed to create window / OpenGL 4.5 context");
+        throw std::runtime_error("[WINDOW]: failed to create window / OpenGL 3.3 context");
     }
 
     glfwSetCursorPosCallback(mWindowId, cursor_position_callback);
@@ -77,13 +81,23 @@ Window::Window()
 
     glfwMakeContextCurrent(mWindowId);
     gladLoadGL();
+    printf("OpenGL %s\n", glGetString(GL_VERSION));
 
 #ifndef NDEBUG
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    glDebugMessageCallback(messagecallback, nullptr);
-    glDebugMessageControl(
-        GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, true);
+    // debug output is core in 4.3, older contexts may have it as KHR_debug
+    if (!GLAD_GL_VERSION_4_3 && glfwExtensionSupported("GL_KHR_debug")) {
+        glad_glDebugMessageCallback = (PFNGLDEBUGMESSAGECALLBACKPROC)glfwGetProcAddress("glDebugMessageCallback");
+        glad_glDebugMessageControl = (PFNGLDEBUGMESSAGECONTROLPROC)glfwGetProcAddress("glDebugMessageControl");
+    }
+    if (glDebugMessageCallback && glDebugMessageControl) {
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        glDebugMessageCallback(messagecallback, nullptr);
+        glDebugMessageControl(
+            GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, true);
+    } else {
+        puts("[WINDOW]: OpenGL debug output not supported (needs 4.3 or GL_KHR_debug), disabled");
+    }
 #endif
 
     glfwSwapInterval(mVsync ? 1 : 0);

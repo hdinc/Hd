@@ -1,4 +1,5 @@
-#version 450 core
+#version 330 core
+#extension GL_ARB_explicit_uniform_location : require
 
 // one instance per shape, the quad covering it is made here. see Renderer2D.
 

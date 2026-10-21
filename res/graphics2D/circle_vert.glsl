@@ -1,4 +1,5 @@
-#version 450 core
+#version 330 core
+#extension GL_ARB_explicit_uniform_location : require
 
 layout(location=1) uniform vec2 c = vec2(0);
 

@@ -1,4 +1,5 @@
-#version 450 core
+#version 330 core
+#extension GL_ARB_explicit_uniform_location : require
 
 layout (points) in;
 layout (triangle_strip, max_vertices = 128) out;
