@@ -22,6 +22,16 @@ target_include_directories(imgui
 
 target_link_libraries(imgui glfw)
 
+# hinted glyphs through freetype, much cleaner small text than
+# stb_truetype. without it imgui uses stb_truetype.
+find_package(Freetype QUIET)
+if(FREETYPE_FOUND)
+    target_sources(imgui PRIVATE misc/freetype/imgui_freetype.cpp)
+    target_link_libraries(imgui Freetype::Freetype)
+    target_compile_definitions(imgui PUBLIC IMGUI_ENABLE_FREETYPE)
+    target_include_directories(imgui PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/misc/freetype>)
+endif()
+
 install(DIRECTORY ./
     DESTINATION include/Hd-${PROJECT_VERSION}/deps/imgui
     FILES_MATCHING PATTERN "*.h"
