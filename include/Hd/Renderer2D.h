@@ -65,6 +65,8 @@ public:
     float textWidth(std::string_view s, float height) const { return m_font->width(s) * height; }
 
     const Font& font() const { return *m_font; }
+    // replaces the font, see Font. keeps the old one if this one throws.
+    void setFont(const unsigned char* ttf, int index = 0);
 
 private:
     struct Instance {

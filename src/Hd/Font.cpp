@@ -2,6 +2,7 @@
 #include <Hd/Resource.h>
 
 #include <cstring>
+#include <stdexcept>
 
 namespace Hd {
 
@@ -24,15 +25,15 @@ std::vector<uint32_t> codepoints()
 
 }
 
-Font::Font(const unsigned char* ttf, int pixelHeight)
+Font::Font(const unsigned char* ttf, int pixelHeight, int index)
     : px(pixelHeight)
 {
     if (!ttf) ttf = (const unsigned char*)Resource::getLibRes("res/fonts/ElenaWebRegular.ttf").first;
 
     // the tables are read while drawing (kerning), keep a copy
-    int offset = stbtt_GetFontOffsetForIndex(ttf, 0);
+    int offset = stbtt_GetFontOffsetForIndex(ttf, index);
     stbtt_fontinfo probe;
-    stbtt_InitFont(&probe, ttf, offset);
+    if (offset < 0 || !stbtt_InitFont(&probe, ttf, offset)) throw std::runtime_error("not a truetype or opentype font");
     // the file size isn't known, the end of the last table is
     size_t size = 0;
     int tables = (ttf[offset + 4] << 8) | ttf[offset + 5];

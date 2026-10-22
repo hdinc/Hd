@@ -34,6 +34,11 @@ Renderer2D::Renderer2D(const unsigned char* font)
     glBindVertexArray(0);
 }
 
+void Renderer2D::setFont(const unsigned char* ttf, int index)
+{
+    m_font = std::make_unique<Font>(ttf, 48, index);
+}
+
 void Renderer2D::begin(const glm::mat4& m)
 {
     vp = m;

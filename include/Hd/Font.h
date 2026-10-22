@@ -28,8 +28,10 @@ public:
     };
 
     // ttf: the font file, the default font of the library if null. pixel
-    // height of the glyphs in the texture, larger is more precise.
-    explicit Font(const unsigned char* ttf = nullptr, int pixelHeight = 48);
+    // height of the glyphs in the texture, larger is more precise. index:
+    // the font in a collection (.ttc). throws std::runtime_error if the
+    // file is not a font stb_truetype can read.
+    explicit Font(const unsigned char* ttf = nullptr, int pixelHeight = 48, int index = 0);
     ~Font();
 
     Font(const Font&) = delete;
