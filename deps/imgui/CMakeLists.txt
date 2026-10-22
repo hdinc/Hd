@@ -22,9 +22,8 @@ target_include_directories(imgui
 
 target_link_libraries(imgui glfw)
 
-# hinted glyphs through freetype, much cleaner small text than
-# stb_truetype. without it imgui uses stb_truetype.
-find_package(Freetype QUIET)
+# hinted glyphs through freetype (found by Hd), much cleaner small text
+# than stb_truetype. without it imgui uses stb_truetype.
 if(FREETYPE_FOUND)
     target_sources(imgui PRIVATE misc/freetype/imgui_freetype.cpp)
     target_link_libraries(imgui Freetype::Freetype)

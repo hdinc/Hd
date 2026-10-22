@@ -5,10 +5,18 @@ project(Hd VERSION 0.1.0)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 
+# hinted glyphs for imgui and small canvas text, stb_truetype and distance
+# fields only without it
+option(HD_USE_FREETYPE "Hinted text through FreeType" ON)
+if(HD_USE_FREETYPE)
+    find_package(Freetype QUIET)
+endif()
+
 add_subdirectory(deps/glad)
 add_subdirectory(deps/imgui)
 add_subdirectory(deps/myar)
 add_subdirectory(deps/stb)
+add_subdirectory(deps/msdfgen)
 
 set(SRC
     src/Hd/Window.cpp
@@ -25,6 +33,8 @@ set(SRC
     src/Hd/Graphics2D.cpp
     src/Hd/Text.cpp
     src/Hd/Font.cpp
+    src/Hd/Msdf.cpp
+    src/Hd/Outline.cpp
     src/Hd/Renderer2D.cpp
 )
 
@@ -48,14 +58,18 @@ target_include_directories(Hd
         $<INSTALL_INTERFACE:include/Hd-${PROJECT_VERSION}/include>
 )
 
-target_link_libraries(Hd PUBLIC glad imgui myar stb glfw glm::glm)
+target_link_libraries(Hd PUBLIC glad imgui myar stb glfw glm::glm PRIVATE msdfgen)
+if(FREETYPE_FOUND)
+    target_link_libraries(Hd PRIVATE Freetype::Freetype)
+    target_compile_definitions(Hd PRIVATE HD_HAS_FREETYPE)
+endif()
 
 set_target_properties(Hd PROPERTIES
     OUTPUT_NAME Hd-${PROJECT_VERSION}
     DEBUG_POSTFIX "_debug"
 )
 
-install(TARGETS Hd glad imgui myar myar-bin stb
+install(TARGETS Hd glad imgui myar myar-bin stb msdfgen
     EXPORT Hd_export
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib

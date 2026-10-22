@@ -21,6 +21,11 @@ namespace Hd {
 // shapes are collected between begin() and end() and drawn in one call, in
 // the order they were added. sizes are in world units, a shape thinner than
 // a pixel is drawn one pixel wide and fainter so it doesn't disappear.
+//
+// text of hintBelow pixels and more is drawn exactly from the font's
+// outlines. smaller text uses hinted bitmaps at its pixel size, on whole
+// pixels, when the font has them (freetype) and the view isn't rotated,
+// else the font's distance fields.
 class Renderer2D {
 public:
     enum class Cap {
@@ -65,6 +70,9 @@ public:
     float textWidth(std::string_view s, float height) const { return m_font->width(s) * height; }
 
     const Font& font() const { return *m_font; }
+    // hinted bitmaps for small text, see the class comment
+    bool hinting = true;
+    int hintBelow = 24;
     // replaces the font, see Font. keeps the old one if this one throws.
     void setFont(const unsigned char* ttf, int index = 0);
 
@@ -77,6 +85,9 @@ private:
     };
 
     void add(const Instance& i);
+    // between world and pixels of the viewport, y up
+    glm::vec2 toPixels(glm::vec2 world) const;
+    glm::vec2 fromPixels(glm::vec2 pixels) const;
 
     std::unique_ptr<Font> m_font;
     Shader shader;
@@ -86,6 +97,10 @@ private:
 
     std::vector<Instance> batch;
     glm::mat4 vp { 1.0f };
+    glm::mat4 inv { 1.0f };
+    glm::vec2 viewport { 1.0f };
+    // the view isn't rotated, text can sit on whole pixels
+    bool snap = false;
     float px = 1.0f;
 };
 
