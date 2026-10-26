@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <Hd/Shader.h>
+#include <string>
 
 #ifdef _WIN32
     #include <malloc.h>
@@ -10,17 +11,38 @@
 
 namespace Hd {
 
+#ifdef __EMSCRIPTEN__
+// glsl 330 as glsl es 300 for webgl 2. emscripten handles the explicit
+// uniform locations (-sGL_EXPLICIT_UNIFORM_LOCATION), so the extension goes.
+static void shader_source(GLuint shader, const char* source)
+{
+    std::string s = source;
+    auto replace = [&](const std::string& from, const std::string& to) {
+        if (auto i = s.find(from); i != std::string::npos) s.replace(i, from.size(), to);
+    };
+    replace("#version 330 core", "#version 300 es\nprecision highp float;\nprecision highp int;\nprecision highp sampler2D;");
+    replace("#extension GL_ARB_explicit_uniform_location : require", "");
+    const char* p = s.c_str();
+    glShaderSource(shader, 1, &p, NULL);
+}
+#else
+static void shader_source(GLuint shader, const char* source)
+{
+    glShaderSource(shader, 1, &source, NULL);
+}
+#endif
+
 Shader::Shader(const char* vertex, const char* fragment)
 {
 
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
     GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
 
-    glShaderSource(vs, 1, &vertex, NULL);
+    shader_source(vs, vertex);
     glCompileShader(vs);
     CheckError(vs, GL_COMPILE_STATUS);
 
-    glShaderSource(fs, 1, &fragment, NULL);
+    shader_source(fs, fragment);
     glCompileShader(fs);
     CheckError(fs, GL_COMPILE_STATUS);
 
@@ -42,15 +64,15 @@ Shader::Shader(const char* vertex, const char* geometry, const char* fragment)
     GLuint gs = glCreateShader(GL_GEOMETRY_SHADER);
     GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
 
-    glShaderSource(vs, 1, &vertex, NULL);
+    shader_source(vs, vertex);
     glCompileShader(vs);
     CheckError(vs, GL_COMPILE_STATUS);
 
-    glShaderSource(fs, 1, &fragment, NULL);
+    shader_source(fs, fragment);
     glCompileShader(fs);
     CheckError(fs, GL_COMPILE_STATUS);
 
-    glShaderSource(gs, 1, &geometry, NULL);
+    shader_source(gs, geometry);
     glCompileShader(gs);
     CheckError(gs, GL_COMPILE_STATUS);
 
@@ -72,7 +94,7 @@ Shader::Shader(const char* compute)
 {
     GLuint cs = glCreateShader(GL_COMPUTE_SHADER);
 
-    glShaderSource(cs, 1, &compute, NULL);
+    shader_source(cs, compute);
     glCompileShader(cs);
     CheckError(cs, GL_COMPILE_STATUS);
 

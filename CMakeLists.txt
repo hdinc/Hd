@@ -2,17 +2,35 @@ cmake_minimum_required(VERSION 3.29)
 
 project(Hd VERSION 0.1.0)
 
-find_package(glfw3 REQUIRED)
-find_package(glm REQUIRED)
+if(NOT TARGET glm::glm)
+    find_package(glm REQUIRED)
+endif()
 
 # hinted glyphs for imgui and small canvas text, stb_truetype and distance
 # fields only without it
 option(HD_USE_FREETYPE "Hinted text through FreeType" ON)
-if(HD_USE_FREETYPE)
-    find_package(Freetype QUIET)
+
+if(EMSCRIPTEN)
+    # glfw and freetype are emscripten ports, gl is webgl 2 through the
+    # gles 3 headers
+    add_library(glfw INTERFACE)
+    target_compile_options(glfw INTERFACE --use-port=contrib.glfw3)
+    target_link_options(glfw INTERFACE --use-port=contrib.glfw3)
+    if(HD_USE_FREETYPE)
+        add_library(Freetype::Freetype INTERFACE IMPORTED)
+        target_compile_options(Freetype::Freetype INTERFACE -sUSE_FREETYPE=1)
+        target_link_options(Freetype::Freetype INTERFACE -sUSE_FREETYPE=1)
+        set(FREETYPE_FOUND TRUE)
+    endif()
+    add_subdirectory(deps/glad_web)
+else()
+    find_package(glfw3 REQUIRED)
+    if(HD_USE_FREETYPE)
+        find_package(Freetype QUIET)
+    endif()
+    add_subdirectory(deps/glad)
 endif()
 
-add_subdirectory(deps/glad)
 add_subdirectory(deps/imgui)
 add_subdirectory(deps/myar)
 add_subdirectory(deps/stb)
@@ -68,6 +86,11 @@ set_target_properties(Hd PROPERTIES
     OUTPUT_NAME Hd-${PROJECT_VERSION}
     DEBUG_POSTFIX "_debug"
 )
+
+# a web build is only linked into the program
+if(EMSCRIPTEN)
+    return()
+endif()
 
 install(TARGETS Hd glad imgui myar myar-bin stb msdfgen
     EXPORT Hd_export

@@ -22,7 +22,13 @@ Gui::Gui(Hd::Window* w)
     ImGui::StyleColorsDark();
 
     ImGui_ImplGlfw_InitForOpenGL(w->Id(), true);
+#ifdef __EMSCRIPTEN__
+    // the canvas follows the size of the browser window
+    ImGui_ImplGlfw_InstallEmscriptenCallbacks(w->Id(), "#canvas");
+    ImGui_ImplOpenGL3_Init("#version 300 es");
+#else
     ImGui_ImplOpenGL3_Init("#version 130");
+#endif
 }
 
 Gui::~Gui()

@@ -25,3 +25,7 @@ target_link_libraries(myar-bin myar)
 set_target_properties(myar-bin PROPERTIES
     OUTPUT_NAME myar-${PROJECT_VERSION}
 )
+# run by node in a web build, on the real file system
+if(EMSCRIPTEN)
+    target_link_options(myar-bin PRIVATE -sNODERAWFS=1)
+endif()

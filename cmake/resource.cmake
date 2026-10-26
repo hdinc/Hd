@@ -1,3 +1,6 @@
+# the folder of this file, for bin2c.cmake
+set(_hd_resource_dir ${CMAKE_CURRENT_LIST_DIR})
+
 # function for adding resources to targets
 function(add_resource_dir target folder)
 
@@ -16,9 +19,23 @@ function(add_resource_dir target folder)
     add_custom_command(
         OUTPUT ${pfix}res.myar
         DEPENDS myar-bin ${files}
-        COMMAND $<TARGET_FILE:myar-bin> archive ${folder} -o ${CMAKE_CURRENT_BINARY_DIR}/${pfix}res.myar -f
+        COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:myar-bin> archive ${folder} -o ${CMAKE_CURRENT_BINARY_DIR}/${pfix}res.myar -f
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
+
+    # wasm-ld can't link binary files, the archive becomes an array in c.
+    # Resource.cpp reads <pfix>res_myar and <pfix>res_myar_size there.
+    if(EMSCRIPTEN)
+        add_custom_command(
+            OUTPUT ${target}_res.c
+            DEPENDS ${pfix}res.myar ${_hd_resource_dir}/bin2c.cmake
+            COMMAND ${CMAKE_COMMAND} -DIN=${pfix}res.myar -DOUT=${target}_res.c -DNAME=${pfix}res_myar
+                -P ${_hd_resource_dir}/bin2c.cmake
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            )
+        target_sources(${target} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/${target}_res.c)
+        return()
+    endif()
 
 #     if(APPLE)
 #         # gnu-ld does not support macos

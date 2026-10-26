@@ -3,5 +3,12 @@
 // leaks the fallback's offset inside .bss into the relocation addend, so the
 // reference ends up pointing past the real symbol when it is overridden.
 
+#ifdef __EMSCRIPTEN__
+extern "C" {
+__attribute__((weak)) extern const char exeres_myar[] = {0};
+__attribute__((weak)) extern const long exeres_myar_size = 0;
+}
+#else
 __attribute__((weak)) char _binary_exeres_myar_start = 0;
 __attribute__((weak)) char _binary_exeres_myar_end   = 0;
+#endif

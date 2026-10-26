@@ -23,10 +23,12 @@
 #endif
 
 static void glfw_error_callback(int error, const char* description);
+#ifndef __EMSCRIPTEN__
 static void GLAPIENTRY messagecallback(
     GLenum source, GLenum type, GLuint id,
     GLenum severity, GLsizei length, const GLchar* message,
     const void* userParam);
+#endif
 
 namespace Hd {
 
@@ -51,6 +53,12 @@ Window::Window()
     if (!glfwInit())
         throw std::runtime_error("[WINDOW]: failed to initialize glfw");
 
+#ifdef __EMSCRIPTEN__
+    // the version is webgl's, 2 is gles 3.0
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#else
     // drivers give the newest version they support, 3.3 is the minimum
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -65,6 +73,7 @@ Window::Window()
 #ifndef NDEBUG
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
     puts("OPENGL DEBUG CONTEXT = ON");
+#endif
 #endif
 
     mWindowId = glfwCreateWindow(mSize[0], mSize[1], mName, NULL, NULL);
@@ -83,7 +92,7 @@ Window::Window()
     gladLoadGL();
     printf("OpenGL %s\n", glGetString(GL_VERSION));
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) && !defined(__EMSCRIPTEN__)
     // debug output is core in 4.3, older contexts may have it as KHR_debug
     if (!GLAD_GL_VERSION_4_3 && glfwExtensionSupported("GL_KHR_debug")) {
         glad_glDebugMessageCallback = (PFNGLDEBUGMESSAGECALLBACKPROC)glfwGetProcAddress("glDebugMessageCallback");
@@ -100,7 +109,10 @@ Window::Window()
     }
 #endif
 
+#ifndef __EMSCRIPTEN__
+    // the browser shows each frame on its animation frame
     glfwSwapInterval(mVsync ? 1 : 0);
+#endif
 
     gWindow = this;
 
@@ -145,7 +157,9 @@ void Window::FullScreen(bool f)
 void Window::VSync(bool b)
 {
     mVsync = b;
+#ifndef __EMSCRIPTEN__
     glfwSwapInterval(mVsync ? 1 : 0);
+#endif
     mVsyncFallback = 0;
     mVsyncFrames = 0;
 }
@@ -156,6 +170,10 @@ void Window::VSync(bool b)
 // the frame rate is limited to the refresh rate instead.
 void Window::checkVsync()
 {
+#ifdef __EMSCRIPTEN__
+    // the browser paces the frames
+    return;
+#endif
     if (!mVsync || mFpsLimit > 0 || mVsyncFallback || mVsyncFrames < 0)
         return;
 
@@ -223,6 +241,9 @@ static void sleepUntil(double deadline)
 
 void Window::waitFpsLimit()
 {
+#ifdef __EMSCRIPTEN__
+    return;
+#endif
     int limit = mFpsLimit > 0 ? mFpsLimit : mVsyncFallback;
     if (limit <= 0)
         return;
@@ -313,6 +334,8 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
+// webgl has no debug output
+#ifndef __EMSCRIPTEN__
 static void GLAPIENTRY messagecallback(GLenum source, GLenum type, GLuint id,
     GLenum severity, GLsizei length, const GLchar* message,
     const void* userParam)
@@ -394,3 +417,4 @@ static void GLAPIENTRY messagecallback(GLenum source, GLenum type, GLuint id,
     }
     puts("");
 }
+#endif

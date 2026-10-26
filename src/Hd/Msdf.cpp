@@ -102,7 +102,13 @@ Atlas pack(const stbtt_fontinfo& info, const std::vector<uint32_t>& codepoints, 
 
     // fields on all cores, each shape on its own
     std::vector<Field> fields(cps.size());
+#ifdef __EMSCRIPTEN__
+    // threads come from a pool started with the page, a thread past it
+    // can't start while this waits. see PTHREAD_POOL_SIZE.
+    unsigned threads = std::clamp(std::thread::hardware_concurrency(), 1u, 4u);
+#else
     unsigned threads = std::clamp(std::thread::hardware_concurrency(), 1u, 8u);
+#endif
     std::vector<std::thread> pool;
     for (unsigned t = 0; t < threads; t++)
         pool.emplace_back([&, t] {
