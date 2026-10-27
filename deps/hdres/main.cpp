@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
-#include "myar.h"
+#include "hdres.h"
 
 void usage()
 {
-    printf("Usage: myar <archive|extract> <dir|file> [-o <name>]\n");
+    printf("Usage: hdres <archive|extract> <dir|file> [-o <name>]\n");
 }
 
 bool overwrite = false;
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
             }
         }
 
-        myar::archiver archiver;
+        hdres::archiver archiver;
 
         archiver.add_dir(dir);
         archiver.write(name);
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
         fread(buf, size, 1, fp);
         fclose(fp);
 
-        myar::reader reader;
+        hdres::reader reader;
         reader.load(buf, size);
 
         delete[] buf;

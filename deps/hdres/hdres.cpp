@@ -5,13 +5,13 @@
 #include <string.h>
 #include <vector>
 #include <filesystem>
-#include "myar.h"
+#include "hdres.h"
 
 // TODO: write files first then header
 
-namespace myar {
+namespace hdres {
 
-char magic[4] = { 'M', 'Y', 'A', 'R' };
+char magic[4] = { 'H', 'D', 'R', 'S' };
 
 reader::~reader()
 {
@@ -27,11 +27,11 @@ void reader::load(const char* buf, long size)
     loaded = true;
 
     if (size < sizeof(magic) + sizeof(long)) {
-        throw std::runtime_error("this is not a MYAR archive");
+        throw std::runtime_error("this is not an hdres archive");
     }
 
     if (memcmp(buf, &magic, 4)) {
-        throw std::runtime_error("this is not a MYAR archive");
+        throw std::runtime_error("this is not an hdres archive");
     }
 
     // copied out, the buffer's offsets aren't aligned for long
@@ -40,10 +40,10 @@ void reader::load(const char* buf, long size)
     long offset = sizeof(magic) + sizeof(long);
 
     for (int i = 0; i < num_file; i++) {
-        myar_header h;
-        memcpy(&h, &buf[offset], sizeof(myar_header));
+        hdres_header h;
+        memcpy(&h, &buf[offset], sizeof(hdres_header));
         header.push_back(h);
-        offset += sizeof(myar_header);
+        offset += sizeof(hdres_header);
     }
 }
 
@@ -139,7 +139,7 @@ void archiver::write(std::string file)
         exit(1);
     }
 
-    std::vector<myar_header> header;
+    std::vector<hdres_header> header;
     std::vector<std::string> name;
     std::vector<std::vector<char>> data;
 
@@ -164,8 +164,8 @@ void archiver::write(std::string file)
             data_offset += data[j].size();
         }
 
-        header[i].name_offset = sizeof(magic) + sizeof(long) + sizeof(myar_header) * header.size() + name_offset;
-        header[i].data_offset = sizeof(magic) + sizeof(long) + sizeof(myar_header) * header.size() + name_size + data_offset;
+        header[i].name_offset = sizeof(magic) + sizeof(long) + sizeof(hdres_header) * header.size() + name_offset;
+        header[i].data_offset = sizeof(magic) + sizeof(long) + sizeof(hdres_header) * header.size() + name_size + data_offset;
     }
 
     unsigned long numbfile = files.size();
@@ -174,7 +174,7 @@ void archiver::write(std::string file)
 
     fwrite(&numbfile, sizeof(long), 1, fp);
 
-    fwrite(header.data(), sizeof(myar_header), header.size(), fp);
+    fwrite(header.data(), sizeof(hdres_header), header.size(), fp);
 
     for (int i = 0; i < name.size(); i++) {
         fwrite(name[i].data(), name[i].size() + 1, 1, fp);

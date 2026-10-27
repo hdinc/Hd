@@ -4,14 +4,14 @@
 #include <vector>
 #include <utility>
 
-namespace myar {
+namespace hdres {
 
-struct myar_file {
+struct hdres_file {
     std::string name;
     std::vector<char> data;
 };
 
-struct myar_header {
+struct hdres_header {
     unsigned long name_offset;
     unsigned long data_offset;
     unsigned long data_size;
@@ -25,7 +25,7 @@ private:
 
     long num_file;
 
-    std::vector<myar_header> header;
+    std::vector<hdres_header> header;
 
     bool del_buf = false;
     bool loaded = false;
@@ -42,7 +42,7 @@ public:
 
 class archiver {
 private:
-    std::vector<myar_file> files;
+    std::vector<hdres_file> files;
 
 public:
     archiver();

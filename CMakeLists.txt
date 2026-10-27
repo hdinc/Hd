@@ -32,7 +32,7 @@ else()
 endif()
 
 add_subdirectory(deps/imgui)
-add_subdirectory(deps/myar)
+add_subdirectory(deps/hdres)
 add_subdirectory(deps/stb)
 add_subdirectory(deps/msdfgen)
 
@@ -76,7 +76,7 @@ target_include_directories(Hd
         $<INSTALL_INTERFACE:include/Hd-${PROJECT_VERSION}/include>
 )
 
-target_link_libraries(Hd PUBLIC glad imgui myar stb glfw glm::glm PRIVATE msdfgen)
+target_link_libraries(Hd PUBLIC glad imgui hdres stb glfw glm::glm PRIVATE msdfgen)
 if(FREETYPE_FOUND)
     target_link_libraries(Hd PRIVATE Freetype::Freetype)
     target_compile_definitions(Hd PRIVATE HD_HAS_FREETYPE)
@@ -92,7 +92,7 @@ if(EMSCRIPTEN)
     return()
 endif()
 
-install(TARGETS Hd glad imgui myar myar-bin stb msdfgen
+install(TARGETS Hd glad imgui hdres hdres-bin stb msdfgen
     EXPORT Hd_export
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib

@@ -1,31 +1,31 @@
 #include <Hd/Resource.h>
-#include <myar.h>
+#include <hdres.h>
 #include <stdexcept>
 
 #ifdef __EMSCRIPTEN__
 // arrays made by add_resource_dir, wasm-ld can't link the archives as they are
-extern "C" const char exeres_myar[];
-extern "C" const long exeres_myar_size;
-extern "C" const char libres_myar[];
-extern "C" const long libres_myar_size;
-#define HD_EXERES exeres_myar, exeres_myar_size
-#define HD_LIBRES libres_myar, libres_myar_size
+extern "C" const char exeres_hdres[];
+extern "C" const long exeres_hdres_size;
+extern "C" const char libres_hdres[];
+extern "C" const long libres_hdres_size;
+#define HD_EXERES exeres_hdres, exeres_hdres_size
+#define HD_LIBRES libres_hdres, libres_hdres_size
 #else
-extern char _binary_exeres_myar_start;
-extern char _binary_exeres_myar_end;
+extern char _binary_exeres_hdres_start;
+extern char _binary_exeres_hdres_end;
 
-extern char _binary_libres_myar_start;
-extern char _binary_libres_myar_end;
-#define HD_EXERES &_binary_exeres_myar_start, &_binary_exeres_myar_end - &_binary_exeres_myar_start
-#define HD_LIBRES &_binary_libres_myar_start, &_binary_libres_myar_end - &_binary_libres_myar_start
+extern char _binary_libres_hdres_start;
+extern char _binary_libres_hdres_end;
+#define HD_EXERES &_binary_exeres_hdres_start, &_binary_exeres_hdres_end - &_binary_exeres_hdres_start
+#define HD_LIBRES &_binary_libres_hdres_start, &_binary_libres_hdres_end - &_binary_libres_hdres_start
 #endif
 
 namespace Hd {
 
 namespace Resource {
 
-    static myar::reader libreader;
-    static myar::reader exereader;
+    static hdres::reader libreader;
+    static hdres::reader exereader;
 
     std::pair<const char*, long> getLibRes(const char* file)
     {

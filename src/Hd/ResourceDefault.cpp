@@ -5,10 +5,10 @@
 
 #ifdef __EMSCRIPTEN__
 extern "C" {
-__attribute__((weak)) extern const char exeres_myar[] = {0};
-__attribute__((weak)) extern const long exeres_myar_size = 0;
+__attribute__((weak)) extern const char exeres_hdres[] = {0};
+__attribute__((weak)) extern const long exeres_hdres_size = 0;
 }
 #else
-__attribute__((weak)) char _binary_exeres_myar_start = 0;
-__attribute__((weak)) char _binary_exeres_myar_end   = 0;
+__attribute__((weak)) char _binary_exeres_hdres_start = 0;
+__attribute__((weak)) char _binary_exeres_hdres_end   = 0;
 #endif
