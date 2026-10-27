@@ -54,6 +54,7 @@ int main(int argc, char** argv)
             FILE* fp = fopen(name.c_str(), "r");
 
             if (fp) {
+                fclose(fp);
                 printf("file %s exist\n", name.c_str());
                 exit(1);
             }
@@ -87,6 +88,7 @@ int main(int argc, char** argv)
         char* buf = new char[size];
 
         fread(buf, size, 1, fp);
+        fclose(fp);
 
         myar::reader reader;
         reader.load(buf, size);

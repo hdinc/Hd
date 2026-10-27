@@ -34,12 +34,15 @@ void reader::load(const char* buf, long size)
         throw std::runtime_error("this is not a MYAR archive");
     }
 
-    num_file = *(long*)&buf[4];
+    // copied out, the buffer's offsets aren't aligned for long
+    memcpy(&num_file, &buf[4], sizeof(long));
 
     long offset = sizeof(magic) + sizeof(long);
 
     for (int i = 0; i < num_file; i++) {
-        header.push_back(*(myar_header*)&buf[offset]);
+        myar_header h;
+        memcpy(&h, &buf[offset], sizeof(myar_header));
+        header.push_back(h);
         offset += sizeof(myar_header);
     }
 }
@@ -186,8 +189,6 @@ void archiver::write(std::string file)
 
 std::vector<char> archiver::read_file(std::string filename)
 {
-    std::vector<char> file;
-
     FILE* fp = fopen(filename.c_str(), "rb");
 
     if (!fp) {
@@ -199,12 +200,14 @@ std::vector<char> archiver::read_file(std::string filename)
     long size = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    char* buf = new char[size];
-    fread(buf, size, 1, fp);
+    std::vector<char> file(size);
 
-    for (int i = 0; i < size; i++) {
-        file.push_back(buf[i]);
+    if (size > 0 && fread(file.data(), size, 1, fp) != 1) {
+        printf("cannot read file: %s\n", filename.c_str());
+        exit(1);
     }
+
+    fclose(fp);
 
     return file;
 }
