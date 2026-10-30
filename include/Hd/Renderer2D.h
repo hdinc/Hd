@@ -19,7 +19,8 @@ namespace Hd {
 // text uses a signed distance field font.
 //
 // shapes are collected between begin() and end() and drawn in one call, in
-// the order they were added. sizes are in world units, a shape thinner than
+// the order they were added. filled polygons are drawn before them, under
+// all lines and text. sizes are in world units, a shape thinner than
 // a pixel is drawn one pixel wide and fainter so it doesn't disappear.
 //
 // text of hintBelow pixels and more is drawn exactly from the font's
@@ -39,6 +40,12 @@ public:
         right,
     };
 
+    enum class Grid {
+        dots,
+        lines,
+        checkers,
+    };
+
     // font: a ttf file, the library's default font if null
     explicit Renderer2D(const unsigned char* font = nullptr);
 
@@ -48,7 +55,7 @@ public:
     // vp maps world to clip space for the current viewport. blending is
     // enabled and left enabled.
     void begin(const glm::mat4& vp);
-    // draws everything collected since begin()
+    // draws everything collected since begin(), the fills first
     void end();
 
     // size of a pixel in world units, valid after begin()
@@ -63,6 +70,23 @@ public:
 
     void rect(glm::vec2 a, glm::vec2 b, glm::vec4 color, float corner = 0.0f);
     void rectOutline(glm::vec2 a, glm::vec2 b, float width, glm::vec4 color, float corner = 0.0f);
+
+    // a filled polygon (any winding, may be concave), drawn under the other
+    // shapes at end(). not anti aliased, outline it for smooth edges.
+    void fill(const std::vector<glm::vec2>& polygon, glm::vec4 color);
+    // a filled triangle, like fill
+    void triangle(glm::vec2 a, glm::vec2 b, glm::vec2 c, glm::vec4 color);
+    // triangles of a simple polygon by ear clipping, three points each, any
+    // winding. a polygon that isn't simple keeps the triangles found until
+    // no ear is left. for caching the triangles of a polygon drawn often.
+    static std::vector<glm::vec2> triangulate(std::vector<glm::vec2> polygon);
+
+    // marks every spacing world units, bigger ones every 5 * spacing, over
+    // the whole viewport, drawn at once (call it after begin() and before
+    // what goes over it). fine: how much the small marks show, 0 to 1, e.g.
+    // fading them out while zooming out. the marks are anti aliased and
+    // scale framebuffer pixels big (more than 1 on hi-dpi screens).
+    void grid(Grid style, float spacing, float fine, glm::vec4 color, float scale = 1.0f);
 
     // one line of utf-8 text. pos is on the baseline, height is from the
     // lowest descender to the highest ascender.
@@ -84,7 +108,13 @@ private:
         glm::vec4 uv;
     };
 
+    struct FillVertex {
+        glm::vec2 pos;
+        glm::vec4 color;
+    };
+
     void add(const Instance& i);
+    void drawFills();
     // between world and pixels of the viewport, y up
     glm::vec2 toPixels(glm::vec2 world) const;
     glm::vec2 fromPixels(glm::vec2 pixels) const;
@@ -96,6 +126,17 @@ private:
     size_t capacity = 0;
 
     std::vector<Instance> batch;
+
+    Shader fillShader;
+    VAO fillVao;
+    VBO fillVbo;
+    size_t fillCapacity = 0;
+    std::vector<FillVertex> fills;
+
+    Shader gridShader;
+    // no attributes, the shader makes the quad
+    VAO gridVao;
+
     glm::mat4 vp { 1.0f };
     glm::mat4 inv { 1.0f };
     glm::vec2 viewport { 1.0f };

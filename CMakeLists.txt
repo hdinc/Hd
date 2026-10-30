@@ -5,6 +5,10 @@ project(Hd VERSION 0.1.0)
 if(NOT TARGET glm::glm)
     find_package(glm REQUIRED)
 endif()
+# theme files
+if(NOT TARGET nlohmann_json::nlohmann_json)
+    find_package(nlohmann_json REQUIRED)
+endif()
 
 # hinted glyphs for imgui and small canvas text, stb_truetype and distance
 # fields only without it
@@ -54,6 +58,16 @@ set(SRC
     src/Hd/Msdf.cpp
     src/Hd/Outline.cpp
     src/Hd/Renderer2D.cpp
+    src/Hd/Fonts.cpp
+    src/Hd/Icons.cpp
+    src/Hd/Theme.cpp
+    src/Hd/Zoom.cpp
+    src/Hd/FileList.cpp
+    src/Hd/FileDialog.cpp
+    src/Hd/Search.cpp
+    src/Hd/Canvas2D.cpp
+    src/Hd/Vt100.cpp
+    src/Hd/TerminalView.cpp
 )
 
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
@@ -76,10 +90,32 @@ target_include_directories(Hd
         $<INSTALL_INTERFACE:include/Hd-${PROJECT_VERSION}/include>
 )
 
-target_link_libraries(Hd PUBLIC glad imgui hdres stb glfw glm::glm PRIVATE msdfgen)
+target_link_libraries(Hd PUBLIC glad imgui hdres stb glfw glm::glm PRIVATE msdfgen nlohmann_json::nlohmann_json)
 if(FREETYPE_FOUND)
     target_link_libraries(Hd PRIVATE Freetype::Freetype)
     target_compile_definitions(Hd PRIVATE HD_HAS_FREETYPE)
+endif()
+
+# the installed fonts for the font picker (Fonts.h) from fontconfig, without
+# it the usual font folders are scanned
+option(HD_USE_FONTCONFIG "Find installed fonts with fontconfig" ON)
+if(HD_USE_FONTCONFIG AND NOT EMSCRIPTEN)
+    find_package(PkgConfig QUIET)
+    if(PkgConfig_FOUND)
+        pkg_check_modules(FONTCONFIG QUIET IMPORTED_TARGET fontconfig)
+    endif()
+endif()
+if(FONTCONFIG_FOUND)
+    target_link_libraries(Hd PRIVATE PkgConfig::FONTCONFIG)
+    target_compile_definitions(Hd PRIVATE HD_HAS_FONTCONFIG)
+endif()
+
+# the tests, run by ctest. an app including the library can set
+# HD_BUILD_TESTS to run them with its own.
+option(HD_BUILD_TESTS "Build the tests of the library" ${PROJECT_IS_TOP_LEVEL})
+if(HD_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
 endif()
 
 set_target_properties(Hd PROPERTIES
@@ -87,8 +123,12 @@ set_target_properties(Hd PROPERTIES
     DEBUG_POSTFIX "_debug"
 )
 
-# a web build is only linked into the program
+# a web build is only linked into the program, with the page's side of
+# Web.h
 if(EMSCRIPTEN)
+    target_sources(Hd PRIVATE src/Hd/Web.cpp)
+    target_link_options(Hd INTERFACE "SHELL:--pre-js ${CMAKE_CURRENT_SOURCE_DIR}/web/pre.js")
+    set_property(TARGET Hd APPEND PROPERTY INTERFACE_LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/web/pre.js)
     return()
 endif()
 

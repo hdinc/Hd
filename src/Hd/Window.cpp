@@ -9,6 +9,10 @@
 #include <Hd/Window.h>
 #include <Hd/FunctionList.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -33,6 +37,17 @@ static void GLAPIENTRY messagecallback(
 namespace Hd {
 
 Window* gWindow;
+
+void Window::run(std::function<bool()> frame)
+{
+#ifdef __EMSCRIPTEN__
+    // lives as long as the page
+    auto f = new std::function<bool()>(std::move(frame));
+    emscripten_set_main_loop_arg([](void* p) { (*static_cast<std::function<bool()>*>(p))(); }, f, 0, false);
+#else
+    while (frame()) { }
+#endif
+}
 
 const char* Window::mName = "Window";
 int Window::mSize[2] = { 1000, 1000 };

@@ -3,6 +3,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 
@@ -26,6 +27,8 @@ enum type : int {
 Renderer2D::Renderer2D(const unsigned char* font)
     : m_font(std::make_unique<Font>(font))
     , shader(Resource::getLibRes("res/renderer2D/shape_vert.glsl").first, Resource::getLibRes("res/renderer2D/shape_frag.glsl").first)
+    , fillShader(Resource::getLibRes("res/renderer2D/fill_vert.glsl").first, Resource::getLibRes("res/renderer2D/fill_frag.glsl").first)
+    , gridShader(Resource::getLibRes("res/renderer2D/grid_vert.glsl").first, Resource::getLibRes("res/renderer2D/grid_frag.glsl").first)
 {
     vao.Bind();
     vbo.Bind(GL_ARRAY_BUFFER);
@@ -34,7 +37,15 @@ Renderer2D::Renderer2D(const unsigned char* font)
         glVertexAttribPointer(k, 4, GL_FLOAT, GL_FALSE, sizeof(Instance), (void*)(k * sizeof(glm::vec4)));
         glVertexAttribDivisor(k, 1);
     }
+
+    fillVao.Bind();
+    fillVbo.Bind(GL_ARRAY_BUFFER);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(FillVertex), (void*)offsetof(FillVertex, pos));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(FillVertex), (void*)offsetof(FillVertex, color));
     glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Renderer2D::setFont(const unsigned char* ttf, int index)
@@ -46,6 +57,7 @@ void Renderer2D::begin(const glm::mat4& m)
 {
     vp = m;
     batch.clear();
+    fills.clear();
 
     GLint v[4];
     glGetIntegerv(GL_VIEWPORT, v);
@@ -73,6 +85,8 @@ glm::vec2 Renderer2D::fromPixels(glm::vec2 pixels) const
 
 void Renderer2D::end()
 {
+    // under the lines and text
+    drawFills();
     if (batch.empty()) return;
 
     glEnable(GL_BLEND);
@@ -112,6 +126,104 @@ void Renderer2D::end()
 void Renderer2D::add(const Instance& i)
 {
     batch.push_back(i);
+}
+
+std::vector<glm::vec2> Renderer2D::triangulate(std::vector<glm::vec2> ps)
+{
+    std::vector<glm::vec2> r;
+    // counter clockwise
+    float area = 0;
+    for (size_t k = 0; k < ps.size(); k++)
+        area += ps[k].x * ps[(k + 1) % ps.size()].y - ps[(k + 1) % ps.size()].x * ps[k].y;
+    if (area < 0) std::reverse(ps.begin(), ps.end());
+
+    auto cross = [](glm::vec2 a, glm::vec2 b, glm::vec2 c) { return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x); };
+    std::vector<int> idx(ps.size());
+    for (size_t k = 0; k < ps.size(); k++)
+        idx[k] = (int)k;
+
+    while (idx.size() > 3) {
+        int n = (int)idx.size();
+        bool clipped = false;
+        for (int k = 0; k < n && !clipped; k++) {
+            auto a = ps[idx[(k + n - 1) % n]], b = ps[idx[k]], c = ps[idx[(k + 1) % n]];
+            float turn = cross(a, b, c);
+            // collinear points go without a triangle
+            if (std::abs(turn) < 1e-6f) {
+                idx.erase(idx.begin() + k);
+                clipped = true;
+                break;
+            }
+            if (turn < 0) continue;
+            bool empty = true;
+            for (int j = 0; j < n && empty; j++) {
+                if (j == k || j == (k + 1) % n || j == (k + n - 1) % n) continue;
+                auto p = ps[idx[j]];
+                if (cross(a, b, p) > 0 && cross(b, c, p) > 0 && cross(c, a, p) > 0) empty = false;
+            }
+            if (!empty) continue;
+            r.insert(r.end(), { a, b, c });
+            idx.erase(idx.begin() + k);
+            clipped = true;
+        }
+        if (!clipped) return r;
+    }
+    if (idx.size() == 3) r.insert(r.end(), { ps[idx[0]], ps[idx[1]], ps[idx[2]] });
+    return r;
+}
+
+void Renderer2D::fill(const std::vector<glm::vec2>& polygon, glm::vec4 color)
+{
+    for (auto p : triangulate(polygon))
+        fills.push_back({ p, color });
+}
+
+void Renderer2D::triangle(glm::vec2 a, glm::vec2 b, glm::vec2 c, glm::vec4 color)
+{
+    fills.insert(fills.end(), { { a, color }, { b, color }, { c, color } });
+}
+
+void Renderer2D::drawFills()
+{
+    if (fills.empty()) return;
+    glEnable(GL_BLEND);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    fillShader.Bind();
+    glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(vp));
+    fillVao.Bind();
+    fillVbo.Bind(GL_ARRAY_BUFFER);
+    // the buffer only grows, rewriting it in place is cheap for drivers
+    // that are slow to respecify buffers many times per frame
+    size_t bytes = fills.size() * sizeof(FillVertex);
+    if (bytes > fillCapacity) {
+        fillCapacity = std::max(bytes, 2 * fillCapacity);
+        glBufferData(GL_ARRAY_BUFFER, fillCapacity, nullptr, GL_DYNAMIC_DRAW);
+    }
+    glBufferSubData(GL_ARRAY_BUFFER, 0, bytes, fills.data());
+    glDrawArrays(GL_TRIANGLES, 0, (GLsizei)fills.size());
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    fills.clear();
+}
+
+void Renderer2D::grid(Grid style, float spacing, float fine, glm::vec4 color, float scale)
+{
+    glEnable(GL_BLEND);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    gridShader.Bind();
+    glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(inv));
+    glUniform4fv(1, 1, &color.x);
+    glUniform1f(2, px);
+    glUniform1f(3, spacing);
+    glUniform1f(4, fine);
+    // 0 dots, 1 lines, 2 checkers
+    glUniform1i(5, style == Grid::lines ? 1 : style == Grid::checkers ? 2 : 0);
+    glUniform1f(6, scale);
+
+    gridVao.Bind();
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
 }
 
 void Renderer2D::line(glm::vec2 a, glm::vec2 b, float width, glm::vec4 color, Cap cap)

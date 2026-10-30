@@ -5,6 +5,8 @@
 
 #include <Hd/FunctionList.h>
 
+#include <functional>
+
 namespace Hd {
 
 class Window {
@@ -28,6 +30,11 @@ public:
     void FullScreen(bool f);
     void VSync(bool v);
     void fpsLimit(int l);
+    // calls frame until it returns false. in the browser the page calls it
+    // once per animation frame and run returns at once: what frame uses
+    // must stay alive.
+    static void run(std::function<bool()> frame);
+
     void SwapBuffers();
     void PollEvents();
     void WaitEvents();

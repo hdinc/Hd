@@ -18,3 +18,13 @@
 #include <Hd/Text.h>
 #include <Hd/Font.h>
 #include <Hd/Renderer2D.h>
+#include <Hd/Fonts.h>
+#include <Hd/Icons.h>
+#include <Hd/Theme.h>
+#include <Hd/Zoom.h>
+#include <Hd/FileList.h>
+#include <Hd/FileDialog.h>
+#include <Hd/Search.h>
+#include <Hd/Vt100.h>
+#include <Hd/TerminalView.h>
+#include <Hd/Canvas2D.h>
