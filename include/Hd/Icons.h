@@ -6,6 +6,11 @@
 // fontawesome.com/icons (free, solid) to add more; apps can add their own
 // the same way.
 
+#include <string_view>
+
+struct ImDrawList;
+struct ImRect;
+
 namespace Hd {
 
 namespace Icon {
@@ -40,8 +45,19 @@ inline constexpr const char* unzoom = "\xef\x81\xa6"; // compress
 inline constexpr const char* copy = "\xef\x83\x85"; // copy
 inline constexpr const char* paste = "\xef\x83\xaa"; // paste
 inline constexpr const char* terminal = "\xef\x84\xa0"; // terminal
+// room for a turning circle at the end of a window title, for work going on:
+// spaces (the interface font has no other blank), Zoom::begin draws the
+// circle in them, in the title bar or the dock tab and in its zoom tab.
+inline constexpr const char* busy = "     ";
 
 }
+
+// whether the text ends with the room of Icon::busy
+bool endsBusy(std::string_view text);
+// a turning circle in the room of Icon::busy at the end of the text, the
+// text's line spanning the item rect `box` from `x` (where the text starts):
+// centered on the line, cut off at the box
+void drawBusy(ImDrawList* list, std::string_view text, float x, const ImRect& box);
 
 // size of the toolbar buttons, chosen in their right click menu or with
 // toolbarSizeMenu. apps keep it with their settings.

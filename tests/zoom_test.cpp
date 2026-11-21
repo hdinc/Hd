@@ -84,9 +84,20 @@ int main()
     frame();
     CHECK(zoom::current() == "B###b");
     CHECK((frame() == std::vector<std::string>{"B"}));
-    // its own window, not the one of the layout
-    auto zb = ImGui::FindWindowByName("B###zoom_B___b");
+    // its own window, not the one of the layout, named after its id
+    auto zb = ImGui::FindWindowByName("B###zoom____b");
     CHECK(zb && zb != ImGui::FindWindowByName("B###b"));
+
+    // a new title with the same id (e.g. progress in it): still zoomed, in
+    // the same window, with the title shown
+    ImGui::NewFrame();
+    bool shown = zoom::begin("B 50%###b");
+    zoom::end();
+    zoom::endFrame();
+    ImGui::Render();
+    CHECK(shown && zoom::active() && zoom::current() == "B 50%###b");
+    CHECK(ImGui::FindWindowByName("B 50%###zoom____b") == zb);
+    CHECK((frame() == std::vector<std::string>{"B"}));
 
     // B closed while zoomed: back to the layout
     frame(false);

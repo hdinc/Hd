@@ -164,4 +164,33 @@ void toolbarCenter()
     SetCursorPosY(GetCursorPosY() + std::max(0.0f, (toolbarButtonSize() - GetFrameHeight()) / 2));
 }
 
+bool endsBusy(std::string_view text)
+{
+    std::string_view room = Icon::busy;
+    return text.size() > room.size() && text.substr(text.size() - room.size()) == room;
+}
+
+void drawBusy(ImDrawList* list, std::string_view text, float x, const ImRect& box)
+{
+    using namespace ImGui;
+    if (!list || !endsBusy(text)) return;
+    std::string_view room = Icon::busy;
+    auto start = text.data(), end = text.data() + text.size();
+    float before = CalcTextSize(start, end - room.size()).x, width = CalcTextSize(end - room.size(), end).x;
+    // a ring a little smaller than the letters, at the right of the room so
+    // the rest is the gap after the text. its middle is the box's, which is
+    // the middle of the line: the text of a title bar or tab is centered in it.
+    float size = std::min(GetFontSize() * 0.75f, width);
+    float thick = std::max(1.5f, ImFloor(size * 0.15f));
+    ImVec2 center{x + before + width - size / 2, (box.Min.y + box.Max.y) / 2};
+    if (center.x - size / 2 >= box.Max.x) return;
+    // three quarters of it, a turn a second
+    float turn = float(std::fmod(GetTime(), 1.0)) * 2 * IM_PI;
+    // not within the window's clip rect, which leaves out its title bar
+    list->PushClipRect(box.Min, box.Max, false);
+    list->PathArcTo(center, (size - thick) / 2, turn, turn + 1.5f * IM_PI, 24);
+    list->PathStroke(GetColorU32(ImGuiCol_Text), ImDrawFlags_None, thick);
+    list->PopClipRect();
+}
+
 }
