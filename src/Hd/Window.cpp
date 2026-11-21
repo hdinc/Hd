@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <algorithm>
 
+#include <Hd/Platform.h>
 #include <Hd/Window.h>
 #include <Hd/FunctionList.h>
 
@@ -91,6 +92,10 @@ Window::Window()
 #endif
 #endif
 
+#ifndef __EMSCRIPTEN__
+    // the size given is at 100%: bigger on a monitor scaled up
+    glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
+#endif
     mWindowId = glfwCreateWindow(mSize[0], mSize[1], mName, NULL, NULL);
     if (!mWindowId) {
         glfwTerminate();
@@ -102,6 +107,14 @@ Window::Window()
     glfwSetMouseButtonCallback(mWindowId, mouse_button_callback);
     glfwSetScrollCallback(mWindowId, scroll_callback);
     glfwSetFramebufferSizeCallback(mWindowId, framebuffer_size_callback);
+    glfwSetWindowContentScaleCallback(mWindowId, content_scale_callback);
+    glfwSetWindowPosCallback(mWindowId, window_pos_callback);
+    glfwSetWindowSizeCallback(mWindowId, window_size_callback);
+    glfwGetWindowPos(mWindowId, &mNormal.x, &mNormal.y);
+    glfwGetWindowSize(mWindowId, &mNormal.w, &mNormal.h);
+    float sy = 1;
+    glfwGetWindowContentScale(mWindowId, &mContentScale, &sy);
+    if (mContentScale <= 0) mContentScale = 1;
 
     glfwMakeContextCurrent(mWindowId);
     gladLoadGL();
@@ -131,7 +144,10 @@ Window::Window()
 
     gWindow = this;
 
-    framebuffer_size_callback(gWindow->Id(), mSize[0], mSize[1]);
+    // scaled to the monitor, the framebuffer isn't the size asked for
+    int fw = mSize[0], fh = mSize[1];
+    glfwGetFramebufferSize(mWindowId, &fw, &fh);
+    framebuffer_size_callback(gWindow->Id(), fw, fh);
 }
 
 Window::~Window()
@@ -340,6 +356,62 @@ void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height
     glViewport(0, 0, width, height);
 
     gWindow->FramebufferSizeCb.run(width, height);
+}
+
+void Window::window_pos_callback(GLFWwindow* window, int x, int y)
+{
+    if (glfwGetWindowAttrib(window, GLFW_MAXIMIZED) || glfwGetWindowAttrib(window, GLFW_ICONIFIED)) return;
+    gWindow->mNormal.x = x;
+    gWindow->mNormal.y = y;
+}
+
+void Window::window_size_callback(GLFWwindow* window, int w, int h)
+{
+    if (glfwGetWindowAttrib(window, GLFW_MAXIMIZED) || glfwGetWindowAttrib(window, GLFW_ICONIFIED) || w <= 0 || h <= 0) return;
+    gWindow->mNormal.w = w;
+    gWindow->mNormal.h = h;
+}
+
+void Window::setDarkTitleBar(bool dark) { Platform::setDarkTitleBar(mWindowId, dark); }
+
+Window::Geometry Window::getGeometry() const
+{
+    Geometry g = mNormal;
+    g.maximized = glfwGetWindowAttrib(mWindowId, GLFW_MAXIMIZED);
+    return g;
+}
+
+void Window::setGeometry(const Geometry& g)
+{
+#ifndef __EMSCRIPTEN__
+    if (g.w < 100 || g.h < 100) return;
+    // the title bar's corner must be on some monitor
+    int n = 0;
+    GLFWmonitor** mons = glfwGetMonitors(&n);
+    bool seen = false;
+    for (int i = 0; i < n && !seen; i++) {
+        int mx, my, mw, mh;
+        glfwGetMonitorWorkarea(mons[i], &mx, &my, &mw, &mh);
+        seen = g.x + 50 >= mx && g.x + 50 < mx + mw && g.y + 10 >= my && g.y + 10 < my + mh;
+    }
+    if (!seen) return;
+    glfwRestoreWindow(mWindowId);
+    glfwSetWindowPos(mWindowId, g.x, g.y);
+    glfwSetWindowSize(mWindowId, g.w, g.h);
+    mNormal = g;
+    if (g.maximized) glfwMaximizeWindow(mWindowId);
+#else
+    (void)g;
+#endif
+}
+
+void Window::content_scale_callback(GLFWwindow* window, float xscale, float yscale)
+{
+    (void)window;
+    (void)yscale;
+
+    gWindow->mContentScale = xscale > 0 ? xscale : 1;
+    gWindow->ContentScaleCb.run(gWindow->mContentScale);
 }
 
 }

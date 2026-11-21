@@ -68,6 +68,7 @@ set(SRC
     src/Hd/Canvas2D.cpp
     src/Hd/Vt100.cpp
     src/Hd/TerminalView.cpp
+    src/Hd/Platform.cpp
 )
 
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
@@ -91,6 +92,10 @@ target_include_directories(Hd
 )
 
 target_link_libraries(Hd PUBLIC glad imgui hdres stb glfw glm::glm PRIVATE msdfgen nlohmann_json::nlohmann_json)
+if(WIN32)
+    # file dialogs, opening URIs, the dark mode setting, dark title bars
+    target_link_libraries(Hd PRIVATE comdlg32 shell32 advapi32 dwmapi)
+endif()
 if(FREETYPE_FOUND)
     target_link_libraries(Hd PRIVATE Freetype::Freetype)
     target_compile_definitions(Hd PRIVATE HD_HAS_FREETYPE)
