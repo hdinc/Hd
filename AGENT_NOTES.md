@@ -48,12 +48,9 @@ submodule.
 - None yet.
 
 ## Current work
-- Branch `ui-scale-fonts-themes`, on top of origin/master a282281 (fonts, icons, themes from logic).
-  - Kept from the first version, rebuilt on upstream's API: scale, geometry, dark title bar, Platform,
-    `waitEvents`, the "system" theme.
-  - Dropped: its own Theme module and font loading. They are in `git stash` "ui-scale-fonts-themes
-    before merging upstream".
-  - Uncommitted. Tested on Windows through pdfview-app.
+- Scale, window geometry, dark title bar, Platform and `waitEvents` are on `master` (41b19a8). They were
+  tested on Windows through pdfview-app.
+- Next: build logic, pdforg and the web build against it; test on Linux.
 
 ## Ruled out
 - nativefiledialog-extended (GTK build dependency).
