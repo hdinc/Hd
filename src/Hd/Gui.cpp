@@ -4,6 +4,7 @@
 #include <Hd/Window.h>
 
 #include <algorithm>
+#include <cstring>
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -83,6 +84,34 @@ void Gui::setTheme(const std::string& key)
 
 bool Gui::lightTheme() const { return Theme::current().base == "light"; }
 
+static ImFont* loadBoldFont(const FontRef& ui, bool system)
+{
+    FontRef bold;
+    if (system) {
+        auto path = Platform::systemUiFont(true);
+        bold.file = std::filesystem::path(std::u8string(path.begin(), path.end()));
+    } else {
+        const auto faces = systemFonts();
+        auto current = std::find_if(faces.begin(), faces.end(), [&](const FontFace& f) { return f.ref == ui; });
+        if (current != faces.end()) {
+            auto match = std::find_if(faces.begin(), faces.end(), [&](const FontFace& f) {
+                return f.family == current->family && f.style == "Bold";
+            });
+            if (match != faces.end()) bold = match->ref;
+        }
+    }
+    if (bold.builtin() || bold == ui) return nullptr;
+    std::string error;
+    auto data = readFont(bold, error);
+    if (data.empty()) return nullptr;
+    // The atlas owns the copy.
+    void* mem = IM_ALLOC(data.size());
+    std::memcpy(mem, data.data(), data.size());
+    ImFontConfig config;
+    config.FontNo = bold.index;
+    return ImGui::GetIO().Fonts->AddFontFromMemoryTTF(mem, static_cast<int>(data.size()), 0.0f, &config);
+}
+
 void Gui::restyle()
 {
     if (mFontsDirty) {
@@ -92,6 +121,7 @@ void Gui::restyle()
         if (ui.builtin())
             if (std::string sys = Platform::systemUiFont(); !sys.empty()) ui.file = std::filesystem::path(std::u8string(sys.begin(), sys.end()));
         loadFonts(ui, mMono, {}, mFontErrors);
+        mBold = loadBoldFont(ui, mUi.builtin());
     }
     if (mThemeDirty) {
         mThemeDirty = false;

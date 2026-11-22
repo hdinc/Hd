@@ -34,8 +34,9 @@ bool prefersDarkTheme();
 // later); elsewhere nothing happens
 void setDarkTitleBar(GLFWwindow* window, bool dark);
 // the path of the system's interface font (Segoe UI, or fontconfig's
-// sans-serif: Noto Sans, DejaVu Sans); empty when none is found. Fonts.h
+// sans-serif: Noto Sans, DejaVu Sans), with weight selected by bold.
+// Empty when none is found. Fonts.h
 // has the rest: every installed font, the default monospace one.
-std::string systemUiFont();
+std::string systemUiFont(bool bold = false);
 
 }

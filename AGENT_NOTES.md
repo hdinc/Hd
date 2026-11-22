@@ -15,7 +15,7 @@ submodule.
   - `Window`: a singleton GLFW window. Callbacks, `run` (also in the browser), content scale, geometry,
     dark title bar.
   - `Gui`: the ImGui frame, and the look. Scale is the monitor's times the user's; fonts and theme
-    changes are applied between frames. `waitEvents`.
+    changes are applied between frames. `boldFont()` exposes the optional bold UI face. `waitEvents`.
   - `Theme`: Dark, Light, Black and custom JSON themes in `configDir()/themes`; the app colour table;
     `ThemeEditor`. Also `setConfigName`/`configDir`.
   - `Fonts`: installed fonts, `FontPicker`, `loadFonts`, `setFontSize`, `monoFont`.

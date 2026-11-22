@@ -64,3 +64,12 @@
 - Build logic, pdforg and the web build against this branch.
 - Run Hd's tests.
 - Test the Linux paths (fc-match, zenity/kdialog, gsettings).
+
+## 2026-11-22 19:24 +03:00 — Provide an optional bold UI face
+
+- Gui loads a bold face with the other UI fonts. It uses the system choice for the default UI
+  font and a matching Bold style for an explicitly chosen installed family. boldFont() returns
+  a null pointer when a separate face is unavailable, allowing the host to supply its fallback.
+- Built through pdfview on Windows with UCRT64. All six CTest targets passed. A Windows OpenGL
+  integration check confirmed the default bold face, a live change to Arial Bold, and the
+  unavailable-face fallback. Font discovery outside Windows was untested.

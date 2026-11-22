@@ -181,10 +181,19 @@ void setDarkTitleBar(GLFWwindow* window, bool dark)
     if (FAILED(DwmSetWindowAttribute(h, 20, &on, sizeof on))) DwmSetWindowAttribute(h, 19, &on, sizeof on);
 }
 
-std::string systemUiFont()
+std::string systemUiFont(bool bold)
 {
     fs::path f = windowsDir() / "Fonts";
-    return firstExisting({f / "segoeui.ttf", f / "arial.ttf", f / "tahoma.ttf"});
+    constexpr const char* faces[][2] = {
+        {"segoeui.ttf", "segoeuib.ttf"},
+        {"arial.ttf", "arialbd.ttf"},
+        {"tahoma.ttf", "tahomabd.ttf"},
+    };
+    for (auto& [regular, heavy] : faces) {
+        auto path = firstExisting({f / regular});
+        if (!path.empty()) return bold ? firstExisting({f / heavy}) : path;
+    }
+    return {};
 }
 
 #elif defined(__EMSCRIPTEN__)
@@ -199,7 +208,7 @@ bool prefersDarkTheme() { return false; }
 
 void setDarkTitleBar(GLFWwindow*, bool) {}
 
-std::string systemUiFont() { return {}; }
+std::string systemUiFont(bool) { return {}; }
 
 #else
 
@@ -264,11 +273,13 @@ bool prefersDarkTheme()
     return dark = false;
 }
 
-std::string systemUiFont()
+std::string systemUiFont(bool bold)
 {
-    std::string f = run("fc-match -f '%{file}' sans-serif 2>/dev/null");
+    std::string f = run(bold ? "fc-match -f '%{file}' 'sans-serif:weight=bold' 2>/dev/null"
+                             : "fc-match -f '%{file}' sans-serif 2>/dev/null");
     std::error_code ec;
     if (!f.empty() && fs::is_regular_file(f, ec)) return f;
+    if (bold) return firstExisting({"/usr/share/fonts/noto/NotoSans-Bold.ttf", "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf", "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"});
     return firstExisting({"/usr/share/fonts/noto/NotoSans-Regular.ttf", "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf", "/usr/share/fonts/TTF/DejaVuSans.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"});
 }
 

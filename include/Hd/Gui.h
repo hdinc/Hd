@@ -42,6 +42,8 @@ public:
     // text height in pixels at scale 1
     void setFontSize(float size);
     float fontSize() const { return mFontSize; }
+    // The UI font's bold face, if available. Refresh after font changes.
+    ImFont* boldFont() const { return mBold; }
     // why the last fonts couldn't be loaded, if they couldn't
     const std::vector<std::string>& fontErrors() const { return mFontErrors; }
 
@@ -75,6 +77,7 @@ private:
     FontRef mUi, mMono;
     float mFontSize = 16;
     std::vector<std::string> mFontErrors;
+    ImFont* mBold = nullptr;
     bool mFontsDirty = true;
     bool mThemeDirty = true;
     bool mStyleDirty = true;
