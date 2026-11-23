@@ -69,6 +69,7 @@ set(SRC
     src/Hd/Vt100.cpp
     src/Hd/TerminalView.cpp
     src/Hd/Platform.cpp
+    src/Hd/Files.cpp
 )
 
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)

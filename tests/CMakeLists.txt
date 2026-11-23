@@ -18,6 +18,12 @@ add_test(NAME hd_vt100_test COMMAND hd_vt100_test)
 add_test(NAME hd_zoom_test COMMAND hd_zoom_test)
 add_test(NAME hd_theme_test COMMAND hd_theme_test ${CMAKE_CURRENT_BINARY_DIR})
 
+# locks between processes (it runs copies of itself) and atomic replacement
+add_executable(hd_files_test files_test.cpp)
+target_link_libraries(hd_files_test Hd)
+target_compile_options(hd_files_test PRIVATE ${HD_TEST_WARNINGS})
+add_test(NAME hd_files_test COMMAND hd_files_test ${CMAKE_CURRENT_BINARY_DIR}/files_test)
+
 # distance fields and curves of fonts: the library's and some of the system's
 # when they're there
 add_executable(hd_font_test font_test.cpp)

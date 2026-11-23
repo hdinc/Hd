@@ -23,10 +23,13 @@ submodule.
   - `Platform`: what the rest doesn't cover. UTF-8 args, native file dialogs (Win32, zenity/kdialog),
     `openUri`, dark-mode setting, dark title bar, the system's interface font.
   - `FileDialog`/`FileList`: an ImGui file dialog (works in the browser).
+  - `Files`: `FileLock` (exclusive between processes: LockFileEx / flock, freed on exit) and
+    `replaceFile` (temp file in the same folder, flushed, then moved over the old one).
   - `Zoom`, `Search`, `Vt100`/`TerminalView`, `Canvas2D`, `Web`.
 - `deps/`: imgui (docking branch, 1.92), glad, glad_web, hdres (resource packer), stb, msdfgen.
 - `res/`: resources packed into the library (shaders, ElenaWeb and fa-solid-900 fonts).
-- `tests/`: doctest tests (font, search, theme, vt100, zoom). Built when Hd is the top-level project or
+- `tests/`: tests with a small CHECK macro (files, font, search, theme, vt100, zoom). `files_test` runs
+  copies of itself to test locks between processes. Built when Hd is the top-level project or
   with `HD_BUILD_TESTS`.
 - `web/pre.js`: the page's side of `Web.h`.
 

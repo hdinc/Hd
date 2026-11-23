@@ -73,3 +73,27 @@
 - Built through pdfview on Windows with UCRT64. All six CTest targets passed. A Windows OpenGL
   integration check confirmed the default bold face, a live change to Arial Bold, and the
   unavailable-face fallback. Font discovery outside Windows was untested.
+
+## 2026-11-23 23:37 +03:00 — File locks between processes and atomic file replacement
+
+- **Features implemented:** `Hd/Files.h`, for files that several processes share, such as
+  an app's settings.
+  - `FileLock(path, timeout)`: an exclusive lock on a lock file, waiting up to the timeout
+    (10 ms polls). Windows: `LockFileEx` on one byte; elsewhere `flock`, which belongs to
+    the open file, so two locks conflict even within one process. The OS frees it when the
+    process exits or crashes. Move-only; always taken in the browser.
+  - `replaceFile(path, contents)`: writes a uniquely named temporary file in the same folder,
+    flushes it (`FlushFileBuffers` / `fsync`, and the folder on POSIX), then moves it over
+    the target (`MoveFileExW` with `MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH` /
+    `rename`). On Windows it retries for about 200 ms while a reader holds the old file
+    without delete sharing. On failure the old file is untouched and the temporary removed.
+- **How it works:** Two primitives rather than one "safe save", so a caller can hold the
+  lock across read, merge and replace (pdfview's settings do). The folder must exist.
+- **Testing:** New `tests/files_test.cpp` (`hd_files_test`): replacing, overwriting and
+  emptying a file with no temporaries left; a missing folder failing without creating it; on
+  Windows, a reader blocking the move leaves the old contents readable and no temporary; a
+  second lock in the same process timing out and succeeding after unlock; a move; a child
+  process failing to take a held lock and taking it once released; and a child that exits
+  holding the lock releasing it. Passed on Windows (UCRT64) through pdfview's build. Not
+  run on Linux.
+- **Recommended features:** The theme editor's saves can use `replaceFile`.
