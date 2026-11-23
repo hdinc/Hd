@@ -24,7 +24,8 @@ std::vector<std::string> openFilesDialog(GLFWwindow* parent, const std::string& 
 // opens a URI (http, https, mailto, ...) with the system's handler. It
 // doesn't check what the URI is: callers decide what is safe to open.
 bool openUri(const std::string& uri);
-// absolute and normal, for comparing paths
+// absolute and normal, for comparing paths. On Windows an MSYS or Cygwin
+// drive path (/c/..., /cygdrive/c/...) means that drive when it exists.
 std::string normalPath(const std::string& path);
 
 // the system is set to a dark look (Windows' app mode, GNOME's color-scheme,

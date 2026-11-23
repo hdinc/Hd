@@ -28,7 +28,7 @@ submodule.
   - `Zoom`, `Search`, `Vt100`/`TerminalView`, `Canvas2D`, `Web`.
 - `deps/`: imgui (docking branch, 1.92), glad, glad_web, hdres (resource packer), stb, msdfgen.
 - `res/`: resources packed into the library (shaders, ElenaWeb and fa-solid-900 fonts).
-- `tests/`: tests with a small CHECK macro (files, font, search, theme, vt100, zoom). `files_test` runs
+- `tests/`: tests with a small CHECK macro (files, font, platform, search, theme, vt100, zoom). `files_test` runs
   copies of itself to test locks between processes. Built when Hd is the top-level project or
   with `HD_BUILD_TESTS`.
 - `web/pre.js`: the page's side of `Web.h`.
@@ -46,6 +46,8 @@ submodule.
   rather than the built-in ElenaWeb.
 - `Gui::setTheme("system")` picks dark or light by the OS setting, re-checked every 2 s.
 - Native file dialogs live in `Platform`; the ImGui one is for the web and for workspaces with a root.
+- `Platform::normalPath` on Windows reads MSYS/Cygwin drive paths (`/c/...`, `/cygdrive/c/...`) as that drive when
+  it exists, so paths from Git Bash scripts and launchers that skip conversion still open.
 
 ## Docs
 - None yet.

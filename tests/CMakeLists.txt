@@ -18,6 +18,12 @@ add_test(NAME hd_vt100_test COMMAND hd_vt100_test)
 add_test(NAME hd_zoom_test COMMAND hd_zoom_test)
 add_test(NAME hd_theme_test COMMAND hd_theme_test ${CMAKE_CURRENT_BINARY_DIR})
 
+# paths (normalPath, MSYS drive paths on Windows)
+add_executable(hd_platform_test platform_test.cpp)
+target_link_libraries(hd_platform_test Hd)
+target_compile_options(hd_platform_test PRIVATE ${HD_TEST_WARNINGS})
+add_test(NAME hd_platform_test COMMAND hd_platform_test)
+
 # locks between processes (it runs copies of itself) and atomic replacement
 add_executable(hd_files_test files_test.cpp)
 target_link_libraries(hd_files_test Hd)

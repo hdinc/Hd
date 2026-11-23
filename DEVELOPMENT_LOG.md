@@ -97,3 +97,18 @@
   holding the lock releasing it. Passed on Windows (UCRT64) through pdfview's build. Not
   run on Linux.
 - **Recommended features:** The theme editor's saves can use `replaceFile`.
+
+## 2026-11-24 00:54 +03:00 — normalPath reads MSYS drive paths on Windows
+
+- **Changes made:** `Platform::normalPath("/c/Users/...")` returned `C:\c\Users\...`:
+  `std::filesystem::absolute` reads `/c/...` as a folder `c` on the current drive. Git Bash
+  usually converts such arguments before starting a Windows program, but launchers, scripts
+  with `MSYS_NO_PATHCONV` and some tools pass them unchanged (seen in pdfview).
+- **How it works:** On Windows, before normalising, a path that is `/` plus one letter, alone
+  or followed by `/` or `\`, or the same after `/cygdrive`, becomes that drive (`/c/x` ->
+  `C:/x`), but only when the drive's root exists; otherwise it may be a real folder and is
+  left alone. Other systems are unchanged.
+- **Testing:** New `tests/platform_test.cpp` (`hd_platform_test`): `/c/...`, `/C/...`,
+  `/cygdrive/c/...` and `/c` on the system drive; an ordinary Windows path with `..`; `/cc/...`
+  staying a folder; a drive letter that doesn't exist staying a folder. Passed on Windows
+  through pdfview's build. Not run on Linux, where only an ordinary path is checked.

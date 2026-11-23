@@ -1,5 +1,6 @@
 #include <Hd/Platform.h>
 
+#include <cctype>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
@@ -89,8 +90,33 @@ namespace {
 
 }
 
-std::string normalPath(const std::string& p)
+#if defined(_WIN32)
+namespace {
+    // MSYS2, Git Bash and Cygwin write drives as /c/... or /cygdrive/c/...;
+    // std::filesystem reads that as a folder c on the current drive. Paths
+    // usually come converted, but not from every launcher or script.
+    std::string fromMsys(const std::string& p)
+    {
+        std::string rest = p.rfind("/cygdrive/", 0) == 0 ? p.substr(9) : p;
+        bool drive = rest.size() >= 2 && rest[0] == '/' && std::isalpha(static_cast<unsigned char>(rest[1]))
+            && (rest.size() == 2 || rest[2] == '/' || rest[2] == '\\');
+        if (!drive) return p;
+        std::string root = std::string(1, static_cast<char>(std::toupper(static_cast<unsigned char>(rest[1])))) + ":";
+        std::error_code ec;
+        // only a drive that exists: otherwise it may be a real folder
+        if (!fs::exists(u8(root + "\\"), ec)) return p;
+        return root + (rest.size() > 2 ? rest.substr(2) : "/");
+    }
+}
+#endif
+
+std::string normalPath(const std::string& path)
 {
+#if defined(_WIN32)
+    std::string p = fromMsys(path);
+#else
+    const std::string& p = path;
+#endif
     std::error_code ec;
     fs::path a = fs::absolute(u8(p), ec);
     if (ec) return p;
