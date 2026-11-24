@@ -112,3 +112,28 @@
   `/cygdrive/c/...` and `/c` on the system drive; an ordinary Windows path with `..`; `/cc/...`
   staying a folder; a drive letter that doesn't exist staying a folder. Passed on Windows
   through pdfview's build. Not run on Linux, where only an ordinary path is checked.
+
+## 2026-11-24 09:55 +03:00 — hasFileDialog; one Linux dialog program; typed folders in FileList
+
+- **Changes made:**
+  - `Platform::openFilesDialog` on Linux ran zenity and, when its answer was empty, kdialog.
+    Both exit with 1 on Cancel, so on a machine with both, cancelling showed a second dialog.
+    It now picks one program first and runs only that.
+  - With neither installed, the dialog returned nothing and the caller couldn't tell why.
+  - `FileList::go("a/b/")` kept the trailing separator (`lexically_normal` keeps it), so the
+    path bar showed the whole path as one part, and the parent was `a/b` again.
+- **Features implemented:** `Platform::hasFileDialog()`: true on Windows; on Linux when zenity
+  or kdialog is on the PATH; false in the browser. Callers use FileDialog.h's dialog
+  otherwise (pdfview-app does).
+- **How it works:** `onPath` looks for an executable in each PATH folder (`access(X_OK)`).
+  `dialogProgram` tries kdialog first when `XDG_CURRENT_DESKTOP` contains KDE, zenity first
+  elsewhere. `FileList::go` drops a trailing empty component unless the path is a root.
+- **Testing:** `hd_platform_test` now runs fake `zenity` and `kdialog` shell scripts on a
+  PATH of their own. It checks: neither present (no dialog, no answer); kdialog alone (two
+  paths on lines, the filter passed as `PDF documents (*.pdf *.PDF)`); both outside KDE
+  (zenity runs, `|`-separated paths, filter argument quoted correctly, kdialog not run);
+  zenity cancelled (empty, kdialog not run); and KDE (kdialog runs). Passed on Linux (Arch
+  under WSL). The FileList fix was checked by hand in pdfview-app on a VNC display: a typed
+  `.../dir with spaces/` shows each folder in the path bar. Not built on Windows.
+- **Outstanding issues:** `openUri` waits for `xdg-open`, which can block without a desktop
+  environment. The real zenity and kdialog were not run.

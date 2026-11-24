@@ -18,8 +18,12 @@ struct FileFilter {
     std::string name; // "PDF documents"
     std::string patterns; // "*.pdf;*.PDF"
 };
+// openFilesDialog has a dialog to show: always on Windows; on Linux when
+// zenity or kdialog is on the PATH. Without one, use FileDialog.h's.
+bool hasFileDialog();
 // asks for files to open; empty when cancelled or when no dialog is
-// available (Linux needs zenity or kdialog)
+// available (hasFileDialog). On Linux it runs one of zenity and kdialog:
+// kdialog first on KDE, zenity first elsewhere.
 std::vector<std::string> openFilesDialog(GLFWwindow* parent, const std::string& title, const std::vector<FileFilter>& filters, bool multiple = true);
 // opens a URI (http, https, mailto, ...) with the system's handler. It
 // doesn't check what the URI is: callers decide what is safe to open.

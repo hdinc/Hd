@@ -6,6 +6,14 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <vector>
+
+#if !defined(_WIN32) && !defined(__EMSCRIPTEN__)
+#include <filesystem>
+#include <fstream>
+#include <iterator>
+#include <unistd.h>
+#endif
 
 static int failures = 0;
 #define CHECK(c)                                                    \
@@ -15,6 +23,72 @@ static int failures = 0;
             failures++;                                             \
         }                                                           \
     } while (0)
+
+#if !defined(_WIN32) && !defined(__EMSCRIPTEN__)
+namespace fs = std::filesystem;
+
+static void writeScript(const fs::path& p, const std::string& body)
+{
+    std::ofstream(p) << "#!/bin/sh\n" << body;
+    fs::permissions(p, fs::perms::owner_all);
+}
+
+static std::string readFile(const fs::path& p)
+{
+    std::ifstream in(p);
+    return {std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
+}
+
+// openFilesDialog with fake zenity and kdialog programs on a PATH of their
+// own: which one runs, what it is given, and how its answer is read
+static void testDialogPrograms()
+{
+    using namespace Hd::Platform;
+    fs::path dir = fs::temp_directory_path() / ("hd_platform_test_" + std::to_string(getpid()));
+    fs::remove_all(dir);
+    fs::create_directories(dir);
+    const char* oldPath = std::getenv("PATH");
+    std::string savedPath = oldPath ? oldPath : "";
+    const char* oldDesktop = std::getenv("XDG_CURRENT_DESKTOP");
+    std::string savedDesktop = oldDesktop ? oldDesktop : "";
+    setenv("PATH", dir.c_str(), 1);
+    std::vector<FileFilter> pdf{{"PDF documents", "*.pdf;*.PDF"}};
+    fs::path zArgs = dir / "zenity.args", kArgs = dir / "kdialog.args";
+
+    // neither: no dialog, and no answer
+    CHECK(!hasFileDialog());
+    CHECK(openFilesDialog(nullptr, "Open", pdf).empty());
+
+    // kdialog only: one path on a line
+    writeScript(dir / "kdialog", "printf '%s\\n' \"$@\" > '" + kArgs.string() + "'\nprintf '/a b.pdf\\n/c.pdf\\n'\n");
+    CHECK(hasFileDialog());
+    CHECK((openFilesDialog(nullptr, "Open", pdf) == std::vector<std::string>{"/a b.pdf", "/c.pdf"}));
+    CHECK(readFile(kArgs).find("PDF documents (*.pdf *.PDF)\n") != std::string::npos);
+
+    // both, outside KDE: zenity runs, paths separated with |
+    writeScript(dir / "zenity", "printf '%s\\n' \"$@\" > '" + zArgs.string() + "'\nprintf '/x.pdf|/y z.pdf\\n'\n");
+    setenv("XDG_CURRENT_DESKTOP", "GNOME", 1);
+    fs::remove(kArgs);
+    CHECK((openFilesDialog(nullptr, "Open", pdf) == std::vector<std::string>{"/x.pdf", "/y z.pdf"}));
+    CHECK(readFile(zArgs).find("--file-filter=PDF documents | *.pdf *.PDF\n") != std::string::npos);
+    CHECK(!fs::exists(kArgs));
+
+    // cancelled (exit 1, no output): no answer, and kdialog isn't tried
+    writeScript(dir / "zenity", "exit 1\n");
+    CHECK(openFilesDialog(nullptr, "Open", pdf).empty());
+    CHECK(!fs::exists(kArgs));
+
+    // on KDE, kdialog first
+    setenv("XDG_CURRENT_DESKTOP", "KDE", 1);
+    CHECK(openFilesDialog(nullptr, "Open", pdf).size() == 2);
+    CHECK(fs::exists(kArgs));
+
+    setenv("PATH", savedPath.c_str(), 1);
+    if (oldDesktop) setenv("XDG_CURRENT_DESKTOP", savedDesktop.c_str(), 1);
+    else unsetenv("XDG_CURRENT_DESKTOP");
+    fs::remove_all(dir);
+}
+#endif
 
 int main()
 {
@@ -46,8 +120,9 @@ int main()
         std::string p = normalPath("/" + missing + "/a");
         CHECK(p.find(":\\" + missing + "\\a") != std::string::npos);
     }
-#else
+#elif !defined(__EMSCRIPTEN__)
     CHECK(normalPath("/c/../tmp") == "/tmp");
+    testDialogPrograms();
 #endif
     if (failures) {
         std::printf("%d check(s) failed\n", failures);

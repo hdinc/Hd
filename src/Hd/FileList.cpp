@@ -79,6 +79,9 @@ std::string formatSize(uintmax_t bytes)
 void FileList::go(const fs::path& folder, const fs::path& select)
 {
     dir = folder;
+    // "a/b/" (a typed folder) as "a/b": its parent and the path bar's parts
+    // need the last name
+    if (!dir.has_filename() && dir.has_relative_path()) dir = dir.parent_path();
     selected = select;
     scrollToSelected = !select.empty();
     stale = true;

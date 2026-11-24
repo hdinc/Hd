@@ -1,5 +1,6 @@
 #include <Hd/Platform.h>
 
+#include <algorithm>
 #include <cctype>
 #include <chrono>
 #include <cstdio>
@@ -25,6 +26,7 @@
 #elif !defined(__EMSCRIPTEN__)
 #include <spawn.h>
 #include <sys/wait.h>
+#include <unistd.h>
 extern char** environ;
 #endif
 
@@ -86,6 +88,32 @@ namespace {
         }
         return out;
     }
+
+    // an executable of that name in a PATH folder
+    bool onPath(const char* name)
+    {
+        const char* path = getenv("PATH");
+        if (!path) return false;
+        std::string all = path;
+        for (size_t a = 0; a <= all.size();) {
+            size_t b = std::min(all.find(':', a), all.size());
+            if (b > a && access((all.substr(a, b - a) + "/" + name).c_str(), X_OK) == 0) return true;
+            a = b + 1;
+        }
+        return false;
+    }
+
+    // the dialog program to run: kdialog first on KDE, zenity first
+    // elsewhere; empty if neither is there
+    std::string dialogProgram()
+    {
+        const char* desktop = getenv("XDG_CURRENT_DESKTOP");
+        bool kde = desktop && strstr(desktop, "KDE");
+        const char* order[] = {kde ? "kdialog" : "zenity", kde ? "zenity" : "kdialog"};
+        for (const char* p : order)
+            if (onPath(p)) return p;
+        return {};
+    }
 #endif
 
 }
@@ -146,6 +174,8 @@ std::vector<std::string> args(int, char**)
     if (w) LocalFree(w);
     return out;
 }
+
+bool hasFileDialog() { return true; }
 
 std::vector<std::string> openFilesDialog(GLFWwindow* parent, const std::string& title, const std::vector<FileFilter>& filters, bool multiple)
 {
@@ -226,6 +256,8 @@ std::string systemUiFont(bool bold)
 
 std::vector<std::string> args(int argc, char** argv) { return std::vector<std::string>(argv + 1, argv + argc); }
 
+bool hasFileDialog() { return false; }
+
 std::vector<std::string> openFilesDialog(GLFWwindow*, const std::string&, const std::vector<FileFilter>&, bool) { return {}; }
 
 bool openUri(const std::string&) { return false; }
@@ -240,28 +272,39 @@ std::string systemUiFont(bool) { return {}; }
 
 std::vector<std::string> args(int argc, char** argv) { return std::vector<std::string>(argv + 1, argv + argc); }
 
+bool hasFileDialog() { return !dialogProgram().empty(); }
+
 std::vector<std::string> openFilesDialog(GLFWwindow*, const std::string& title, const std::vector<FileFilter>& filters, bool multiple)
 {
-    // zenity (GNOME and others) separates paths with |, kdialog (KDE) puts
-    // one on a line
-    std::string z = "zenity --file-selection --separator='|' --title=" + quote(title.empty() ? "Open" : title);
-    if (multiple) z += " --multiple";
-    std::string kfilter;
-    for (const auto& f : filters) {
-        std::string pats = f.patterns;
-        for (char& c : pats)
-            if (c == ';') c = ' ';
-        z += " --file-filter=" + quote(f.name + " | " + pats);
-        kfilter += (kfilter.empty() ? "" : "\n") + f.name + " (" + pats + ")";
-    }
-    z += " --file-filter=" + quote("All files | *");
-    std::string out = run(z + " 2>/dev/null");
-    if (out.empty()) {
-        std::string k = "kdialog --getopenfilename . " + quote(kfilter.empty() ? "*" : kfilter);
-        if (multiple) k += " --multiple --separate-output";
-        out = run(k + " 2>/dev/null");
-    }
-    return lines(out);
+    // one program only: both exit with 1 when cancelled, so trying the
+    // other after an empty answer would show a second dialog
+    std::string program = dialogProgram();
+    std::string cmd;
+    if (program == "zenity") {
+        // paths separated with |
+        cmd = "zenity --file-selection --separator='|' --title=" + quote(title.empty() ? "Open" : title);
+        if (multiple) cmd += " --multiple";
+        for (const auto& f : filters) {
+            std::string pats = f.patterns;
+            for (char& c : pats)
+                if (c == ';') c = ' ';
+            cmd += " --file-filter=" + quote(f.name + " | " + pats);
+        }
+        cmd += " --file-filter=" + quote("All files | *");
+    } else if (program == "kdialog") {
+        // one path on a line
+        std::string kfilter;
+        for (const auto& f : filters) {
+            std::string pats = f.patterns;
+            for (char& c : pats)
+                if (c == ';') c = ' ';
+            kfilter += (kfilter.empty() ? "" : "\n") + f.name + " (" + pats + ")";
+        }
+        cmd = "kdialog --title " + quote(title.empty() ? "Open" : title) + " --getopenfilename . " + quote(kfilter.empty() ? "*" : kfilter);
+        if (multiple) cmd += " --multiple --separate-output";
+    } else
+        return {};
+    return lines(run(cmd + " 2>/dev/null"));
 }
 
 bool openUri(const std::string& uri)

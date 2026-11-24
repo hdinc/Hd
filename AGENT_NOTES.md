@@ -45,7 +45,10 @@ submodule.
 - `Gui` defaults: the "dark" theme, and the system's interface font (Segoe UI, fontconfig sans-serif)
   rather than the built-in ElenaWeb.
 - `Gui::setTheme("system")` picks dark or light by the OS setting, re-checked every 2 s.
-- Native file dialogs live in `Platform`; the ImGui one is for the web and for workspaces with a root.
+- Native file dialogs live in `Platform`; the ImGui one is for the web, for workspaces with a root, and as the
+  fallback when `Platform::hasFileDialog()` is false (Linux without zenity or kdialog).
+- Linux dialogs run one program, chosen before running it (kdialog first on KDE, zenity first elsewhere): both exit
+  with 1 on Cancel, so trying the other after an empty answer showed a second dialog.
 - `Platform::normalPath` on Windows reads MSYS/Cygwin drive paths (`/c/...`, `/cygdrive/c/...`) as that drive when
   it exists, so paths from Git Bash scripts and launchers that skip conversion still open.
 
@@ -54,8 +57,9 @@ submodule.
 
 ## Current work
 - Scale, window geometry, dark title bar, Platform and `waitEvents` are on `master` (41b19a8). They were
-  tested on Windows through pdfview-app.
-- Next: build logic, pdforg and the web build against it; test on Linux.
+  tested on Windows through pdfview-app, and on Linux (Arch under WSL, X11) on 2026-11-24, except the
+  zenity/kdialog dialogs themselves (`hd_platform_test` runs fake ones), `openUri` and dark mode.
+- Next: build logic, pdforg and the web build against it.
 
 ## Ruled out
 - nativefiledialog-extended (GTK build dependency).
