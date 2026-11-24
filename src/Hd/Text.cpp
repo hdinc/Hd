@@ -35,7 +35,7 @@ Text::Text(int size, const char* font)
     unsigned char temp_bitmap[font_texture_size * font_texture_size];
 
     if (font == 0) {
-        font = Hd::Resource::getLibRes("res/fonts/ElenaWebRegular.ttf").first;
+        font = Hd::Resource::getLibRes("res/fonts/NotoSans-Regular.ttf").first;
     }
 
     stbtt_BakeFontBitmap((const unsigned char*)font, 0, size, temp_bitmap, font_texture_size, font_texture_size, 32, 96, cdata);

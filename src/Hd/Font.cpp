@@ -78,7 +78,7 @@ struct Font::Hinted { };
 Font::Font(const unsigned char* ttf, int pixelHeight, int index)
     : px(pixelHeight)
 {
-    if (!ttf) ttf = (const unsigned char*)Resource::getLibRes("res/fonts/ElenaWebRegular.ttf").first;
+    if (!ttf) ttf = (const unsigned char*)Resource::getLibRes("res/fonts/NotoSans-Regular.ttf").first;
 
     // the tables are read while drawing (kerning), keep a copy
     int offset = stbtt_GetFontOffsetForIndex(ttf, index);

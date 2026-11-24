@@ -30,7 +30,8 @@ submodule.
     `replaceFile` (temp file in the same folder, flushed, then moved over the old one).
   - `Zoom`, `Search`, `Vt100`/`TerminalView`, `Canvas2D`, `Web`.
 - `deps/`: imgui (docking branch, 1.92), glad, glad_web, hdres (resource packer), stb, msdfgen.
-- `res/`: resources packed into the library (shaders, ElenaWeb and fa-solid-900 fonts).
+- `res/`: resources packed into the library (shaders; fonts: Noto Sans (OFL) built-in, fa-solid-900 icons,
+  with their licence files). Added or removed files rerun cmake (`CONFIGURE_DEPENDS`).
 - `tests/`: tests with a small CHECK macro (filelist, files, font, fonts, platform, search, theme, vt100, zoom). `files_test` runs
   copies of itself to test locks between processes. Built when Hd is the top-level project or
   with `HD_BUILD_TESTS`.
@@ -46,7 +47,7 @@ submodule.
 - `Gui::restyle` order: ImGuiStyle defaults → `Theme::applyCurrent` → `setFontSize` → `ScaleAllSizes` →
   `FontScaleDpi`.
 - `Gui` defaults: the "dark" theme, and the system's interface font (Segoe UI, fontconfig sans-serif)
-  rather than the built-in ElenaWeb.
+  rather than the built-in Noto Sans (the fallback, the web build's font and canvas text's default).
 - `Gui::setTheme("system")` picks dark or light by the OS setting, re-checked every 2 s.
 - Native file dialogs live in `Platform`; the ImGui one is for the web, for workspaces with a root, and as the
   fallback when `Platform::hasFileDialog()` is false (Linux without zenity or kdialog).
@@ -66,9 +67,12 @@ submodule.
 
 ## Current work
 - The file browser (2026-11-24, pdforg's W2) was checked on a Windows desktop in pdforg's W3: places,
-  drives with labels, typed Unicode paths. CJK fallback fonts added the same day (uncommitted).
+  drives with labels, typed Unicode paths. CJK fallback fonts in a7ea8f8. Built-in font ElenaWeb (no
+  licence) replaced by Noto Sans (uncommitted, for pdforg's W4 package).
 - Next: build logic and the web build against it (the web build: FileList reads synchronously there).
 
 ## Ruled out
 - nativefiledialog-extended (GTK build dependency).
 - A second theme system: upstream's `Theme` (JSON, editor) is the one.
+- ElenaWeb as the built-in font: no licence for shipping it. ImGui's ProggyVector instead: Latin-1 only,
+  monospace look, and stored compressed (canvas text needs a TTF).

@@ -5,8 +5,8 @@ set(_hd_resource_dir ${CMAKE_CURRENT_LIST_DIR})
 function(add_resource_dir target folder)
 
     # get the files inside resource folder. when the files are changed res.hdres
-    # will be recreated. when new files are added we need to rerun cmake
-    file(GLOB_RECURSE files ${folder}/*)
+    # will be recreated; files added or removed rerun cmake at the next build
+    file(GLOB_RECURSE files CONFIGURE_DEPENDS ${folder}/*)
 
     get_target_property(type ${target} TYPE)
     if (type STREQUAL "EXECUTABLE")

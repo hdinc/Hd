@@ -48,7 +48,7 @@ set_tests_properties(hd_fonts_test PROPERTIES SKIP_RETURN_CODE 77)
 add_executable(hd_font_test font_test.cpp)
 target_link_libraries(hd_font_test Hd)
 target_compile_options(hd_font_test PRIVATE ${HD_TEST_WARNINGS})
-add_test(NAME hd_font_test COMMAND hd_font_test ${PROJECT_SOURCE_DIR}/res/fonts/ElenaWebRegular.ttf
+add_test(NAME hd_font_test COMMAND hd_font_test ${PROJECT_SOURCE_DIR}/res/fonts/NotoSans-Regular.ttf
     /usr/share/fonts/noto/NotoSans-CondensedBoldItalic.ttf /usr/share/fonts/gsfonts/C059-BdIta.otf
     /usr/share/fonts/noto/NotoSerifDisplay-SemiCondensedBlackItalic.ttf)
 set_tests_properties(hd_font_test PROPERTIES SKIP_RETURN_CODE 77)

@@ -204,3 +204,19 @@
   against it. Not tested: Linux, macOS, the web build; seeing it on screen (the Windows screen was locked).
 - **Outstanding issues:** about 33 MB of font data stays in memory on Windows (whole fonts, as ImGui needs).
 - **Next steps:** check on screen in pdforg and pdfview; build on Linux (fontconfig path) and the web.
+
+## 2026-11-24 17:20 +03:00 — Noto Sans replaces ElenaWeb as the built-in font; resources glob on build
+
+- **Changes made:** `res/fonts/ElenaWebRegular.ttf` (no licence file; Elena is a commercial typeface) is
+  replaced by Noto Sans Regular (unhinted, 431,364 bytes, SIL OFL 1.1, `res/fonts/NotoSans-OFL.txt`), from
+  notofonts' repository. It is the font `loadFonts` falls back to, the web build's font, and the default of
+  canvas text (`Font`, `Text`). `add_resource_dir` globs with `CONFIGURE_DEPENDS`, so adding or removing a
+  resource reruns cmake (a removed file stopped the build before).
+- **How it works:** the same `getLibRes` path with the new name in Font.cpp, Fonts.cpp, Text.cpp and the
+  font test. Rejected: ImGui's ProggyVector (no download, MIT) — Latin-1 only (no Turkish ş ğ ı İ, Greek,
+  Cyrillic: the web build would show ?), a monospace pixel look, and kept compressed inside ImGui while
+  canvas text needs TTF bytes; hinted Noto (621 KB; FreeType/stb don't need the hints).
+- **Testing:** Windows (UCRT64): all 9 tests pass, `hd_font_test` now on Noto Sans (distance fields and
+  curves of its glyphs), `hd_fonts_test` (the built-in font has no CJK, the fallbacks add it). pdforg and
+  pdfview build against it. Not tested: the web build, logic, seeing the built-in font on screen.
+- **Outstanding issues:** the library grows by ~385 KB (Noto has Greek and Cyrillic too).

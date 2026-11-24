@@ -631,7 +631,7 @@ bool FontPicker::gui(const char* label, FontRef& f, const std::vector<FontFace>&
 void loadFonts(const FontRef& ui, const FontRef& mono, std::string_view builtinTtf, std::vector<std::string>& errors, bool icons, bool fallback)
 {
     if (builtinTtf.empty()) {
-        auto r = Resource::getLibRes("res/fonts/ElenaWebRegular.ttf");
+        auto r = Resource::getLibRes("res/fonts/NotoSans-Regular.ttf");
         builtinTtf = {r.first, (size_t)r.second};
     }
     std::string_view iconsTtf;
