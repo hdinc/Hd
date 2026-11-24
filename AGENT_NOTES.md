@@ -18,7 +18,7 @@ submodule.
     changes are applied between frames. `boldFont()` exposes the optional bold UI face. `waitEvents`.
   - `Theme`: Dark, Light, Black and custom JSON themes in `configDir()/themes`; the app colour table;
     `ThemeEditor`. Also `setConfigName`/`configDir`.
-  - `Fonts`: installed fonts, `FontPicker`, `loadFonts`, `setFontSize`, `monoFont`.
+  - `Fonts`: installed fonts, `FontPicker`, `loadFonts`, `setFontSize`, `monoFont`, `fallbackFonts` (CJK).
   - `Icons`: Font Awesome solid glyphs, merged into the UI font; `iconButton`; toolbar sizes.
   - `Platform`: what the rest doesn't cover. UTF-8 args, native file and folder dialogs (Win32,
     zenity/kdialog), `openUri` (doesn't wait), dark-mode setting, dark title bar, the system's interface font.
@@ -31,7 +31,7 @@ submodule.
   - `Zoom`, `Search`, `Vt100`/`TerminalView`, `Canvas2D`, `Web`.
 - `deps/`: imgui (docking branch, 1.92), glad, glad_web, hdres (resource packer), stb, msdfgen.
 - `res/`: resources packed into the library (shaders, ElenaWeb and fa-solid-900 fonts).
-- `tests/`: tests with a small CHECK macro (filelist, files, font, platform, search, theme, vt100, zoom). `files_test` runs
+- `tests/`: tests with a small CHECK macro (filelist, files, font, fonts, platform, search, theme, vt100, zoom). `files_test` runs
   copies of itself to test locks between processes. Built when Hd is the top-level project or
   with `HD_BUILD_TESTS`.
 - `web/pre.js`: the page's side of `Web.h`.
@@ -58,12 +58,15 @@ submodule.
 ## Docs
 - None yet.
 
+- CJK glyphs come from fallback fonts merged after the icons into the UI and mono fonts (`fallbackFonts`:
+  per zh-cn/ja/ko, fontconfig's pick or known files, only if no chosen font has the script yet; read once
+  per process, shared by both fonts). Windows: YaHei + Malgun Gothic (~33 MB in memory).
 - Paths as text are UTF-8 everywhere (`toUtf8`/`fromUtf8`); never `path::string()` (ANSI on Windows).
 - `FileList` reads on a worker thread, but filters (`show`, hidden) on the UI thread.
 
 ## Current work
-- The file browser work (2026-11-24, for pdforg's Windows port W2) is committed locally, not pushed; pdforg
-  uses it, pdfview builds against it. Not checked on a Windows desktop yet (pdforg's W3).
+- The file browser (2026-11-24, pdforg's W2) was checked on a Windows desktop in pdforg's W3: places,
+  drives with labels, typed Unicode paths. CJK fallback fonts added the same day (uncommitted).
 - Next: build logic and the web build against it (the web build: FileList reads synchronously there).
 
 ## Ruled out

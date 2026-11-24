@@ -71,8 +71,17 @@ private:
 // built-in mono font is the system's default monospace font or imgui's own.
 // fonts that can't be loaded are replaced by the built-in ones, errors says
 // why. glyphs are made when they are first drawn, at any size. with icons
-// the library's icon font is merged into the ui font, see Icons.h.
-void loadFonts(const FontRef& ui, const FontRef& mono, std::string_view builtinTtf, std::vector<std::string>& errors, bool icons = true);
+// the library's icon font is merged into the ui font, see Icons.h. with
+// fallback the fallbackFonts() are merged into both, for the glyphs they
+// lack.
+void loadFonts(const FontRef& ui, const FontRef& mono, std::string_view builtinTtf, std::vector<std::string>& errors, bool icons = true, bool fallback = true);
+
+// fonts for the scripts interface fonts rarely have: Chinese, Japanese and
+// Korean. the fewest installed fonts that cover them, as fontconfig picks
+// them for each language or else known files (Microsoft YaHei and Malgun
+// Gothic on Windows, PingFang, Noto Sans CJK...); empty when there are none.
+// they are read once and kept, tens of MB, the first call takes a moment.
+std::vector<FontRef> fallbackFonts();
 
 // height of the text in pixels from the next frame on, for all fonts
 void setFontSize(float size);

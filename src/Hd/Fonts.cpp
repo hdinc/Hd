@@ -328,7 +328,24 @@ FontRef fontconfig_mono()
     return r;
 }
 
-#else
+// the font fontconfig picks for a language, if it can be drawn
+FontRef fontconfig_lang(const char* lang)
+{
+    FontRef r;
+    if (!FcInit()) return r;
+    auto pattern = FcNameParse((const FcChar8*)(std::string("sans-serif:lang=") + lang).c_str());
+    FcConfigSubstitute(nullptr, pattern, FcMatchPattern);
+    FcDefaultSubstitute(pattern);
+    FcResult result;
+    if (auto match = FcFontMatch(nullptr, pattern, &result)) {
+        if (auto f = fontconfig_face(match)) r = f->ref;
+        FcPatternDestroy(match);
+    }
+    FcPatternDestroy(pattern);
+    return r;
+}
+
+#endif
 
 std::vector<fs::path> font_dirs()
 {
@@ -354,6 +371,8 @@ std::vector<fs::path> font_dirs()
 #endif
     return r;
 }
+
+#ifndef HD_HAS_FONTCONFIG
 
 std::vector<FontFace> scanned_fonts()
 {
@@ -440,12 +459,15 @@ FontRef defaultMonoFont()
 
 std::vector<unsigned char> readFont(const FontRef& f, std::string& error)
 {
-    std::ifstream in(f.file, std::ios::binary);
+    std::ifstream in(f.file, std::ios::binary | std::ios::ate);
     if (!in) {
         error = "can't open the file";
         return {};
     }
-    std::vector<unsigned char> data((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    // in one read: CJK fonts are 10-20 MB, a byte at a time took seconds
+    std::vector<unsigned char> data(std::max<std::streamoff>(0, in.tellg()));
+    in.seekg(0);
+    if (!in.read(reinterpret_cast<char*>(data.data()), (std::streamsize)data.size())) data.clear();
 
     int offset = data.empty() ? -1 : stbtt_GetFontOffsetForIndex(data.data(), f.index);
     stbtt_fontinfo info;
@@ -462,6 +484,91 @@ std::vector<unsigned char> readFont(const FontRef& f, std::string& error)
         return {};
     }
     return data;
+}
+
+namespace {
+
+struct LoadedFont {
+    FontRef ref;
+    std::vector<unsigned char> data;
+};
+
+bool has_glyph(const LoadedFont& f, unsigned codepoint)
+{
+    stbtt_fontinfo info;
+    int offset = stbtt_GetFontOffsetForIndex(f.data.data(), f.ref.index);
+    return offset >= 0 && stbtt_InitFont(&info, f.data.data(), offset) && stbtt_FindGlyphIndex(&info, (int)codepoint);
+}
+
+// the fonts that may cover a language, best first
+std::vector<FontRef> candidates(const char* lang)
+{
+    std::vector<FontRef> r;
+#ifdef HD_HAS_FONTCONFIG
+    if (auto f = fontconfig_lang(lang); !f.builtin()) r.push_back(f);
+#else
+    (void)lang;
+#endif
+    // the usual ones of each system, by file name: Windows (YaHei has kana
+    // too, Malgun Gothic Hangul), macOS, then Noto and WenQuanYi on Linux
+    static const char* const names[] = {"msyh.ttc", "YuGothM.ttc", "malgun.ttf", "PingFang.ttc", "Hiragino Sans GB.ttc", "AppleSDGothicNeo.ttc",
+        "NotoSansCJK-Regular.ttc", "NotoSansCJKsc-Regular.otf", "wqy-microhei.ttc", "wqy-zenhei.ttc"};
+    for (auto& dir : font_dirs())
+        for (auto n : names) {
+            std::error_code ec;
+            if (fs::is_regular_file(dir / n, ec)) r.push_back({dir / n, 0});
+        }
+    return r;
+}
+
+// read once: they are large (tens of MB) and the same for every loadFonts
+const std::vector<LoadedFont>& fallbacks()
+{
+    static const std::vector<LoadedFont> r = [] {
+        std::vector<LoadedFont> chosen;
+        // a script and a letter of it; a font chosen for one may cover the next
+        static const struct {
+            const char* lang;
+            unsigned codepoint;
+        } scripts[] = {{"zh-cn", 0x6771}, {"ja", 0x3042}, {"ko", 0xAC00}};
+        for (auto& s : scripts) {
+            if (std::any_of(chosen.begin(), chosen.end(), [&](auto& f) { return has_glyph(f, s.codepoint); })) continue;
+            for (auto& ref : candidates(s.lang)) {
+                if (std::any_of(chosen.begin(), chosen.end(), [&](auto& f) { return f.ref == ref; })) continue;
+                std::string error;
+                LoadedFont f {ref, readFont(ref, error)};
+                if (!f.data.empty() && has_glyph(f, s.codepoint)) {
+                    chosen.push_back(std::move(f));
+                    break;
+                }
+            }
+        }
+        return chosen;
+    }();
+    return r;
+}
+
+// merges the fallback fonts into the font added last
+void merge_fallbacks()
+{
+    for (auto& f : fallbacks()) {
+        ImFontConfig config;
+        config.MergeMode = true;
+        // shared by the ui and mono fonts, kept by fallbacks()
+        config.FontDataOwnedByAtlas = false;
+        config.FontNo = f.ref.index;
+        ImGui::GetIO().Fonts->AddFontFromMemoryTTF((void*)f.data.data(), (int)f.data.size(), 0.0f, &config);
+    }
+}
+
+}
+
+std::vector<FontRef> fallbackFonts()
+{
+    std::vector<FontRef> r;
+    for (auto& f : fallbacks())
+        r.push_back(f.ref);
+    return r;
 }
 
 bool FontPicker::gui(const char* label, FontRef& f, const std::vector<FontFace>& fonts, const char* builtin)
@@ -521,7 +628,7 @@ bool FontPicker::gui(const char* label, FontRef& f, const std::vector<FontFace>&
     return changed;
 }
 
-void loadFonts(const FontRef& ui, const FontRef& mono, std::string_view builtinTtf, std::vector<std::string>& errors, bool icons)
+void loadFonts(const FontRef& ui, const FontRef& mono, std::string_view builtinTtf, std::vector<std::string>& errors, bool icons, bool fallback)
 {
     if (builtinTtf.empty()) {
         auto r = Resource::getLibRes("res/fonts/ElenaWebRegular.ttf");
@@ -573,11 +680,14 @@ void loadFonts(const FontRef& ui, const FontRef& mono, std::string_view builtinT
         config.OversampleH = config.OversampleV = 1;
         io.Fonts->AddFontFromMemoryTTF((void*)iconsTtf.data(), (int)iconsTtf.size(), 0.0f, &config);
     }
+    // after the icons: a glyph comes from the first font that has it
+    if (fallback) merge_fallbacks();
 
     if (!mono.builtin()) g_mono = add(mono, "monospace");
     if (!g_mono && !defaultMonoFont().builtin()) g_mono = add(defaultMonoFont(), "monospace");
     // proggy vector, imgui's own
     if (!g_mono) g_mono = io.Fonts->AddFontDefaultVector();
+    if (fallback) merge_fallbacks();
 }
 
 void setFontSize(float size)

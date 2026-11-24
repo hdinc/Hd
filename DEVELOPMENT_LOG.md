@@ -180,3 +180,27 @@
   shares, New folder by hand.
 - **Outstanding issues:** the native dialogs block the frame that opens them (as before). A UNC
   share's parent folders can't be walked up in the path bar with libstdc++.
+
+## 2026-11-24 16:05 +03:00 — CJK fallback fonts; readFont in one read
+
+- **Changes made:** Chinese, Japanese and Korean text no longer draws as "?" boxes with the system's interface
+  font (Segoe UI has none of them): `loadFonts` merges fallback fonts into the UI font (after the icons) and
+  the mono font. `readFont` reads the file in one go: it went byte by byte through `istreambuf_iterator`,
+  2.3 s for the two Windows CJK fonts, now about 60 ms (every font load gains).
+- **Features implemented:** `fallbackFonts()`; `loadFonts(..., bool fallback = true)` to leave them out.
+- **How it works:** for zh-cn, ja and ko in turn, with a letter of each (東, あ, 가): skipped when a font
+  already chosen has that letter, otherwise the first candidate that has it is added. Candidates are
+  fontconfig's match for `sans-serif:lang=<lang>`, then known files in the font folders (msyh.ttc,
+  YuGothM.ttc, malgun.ttf, PingFang.ttc, Hiragino Sans GB, Apple SD Gothic Neo, Noto Sans CJK, WenQuanYi).
+  On Windows that gives Microsoft YaHei (Han and kana) and Malgun Gothic (Hangul); on Linux usually one
+  Noto Sans CJK file. They are read once per process into a static list and merged with
+  `FontDataOwnedByAtlas = false`, so the UI and mono fonts share them and font changes don't read them again.
+  `font_dirs` now builds with fontconfig too (the known-file search uses it). Rejected: loading only for
+  text that needs it (ImGui needs the font data before the glyph is asked for); a single font (no installed
+  Windows font covers Simplified Chinese and Hangul well).
+- **Testing:** Windows (UCRT64): all 9 tests pass, with the new `hd_fonts_test`: the fallback list is stable,
+  has no duplicates, covers 東 京 あ ア 가, and ImGui's baked built-in and mono fonts find those glyphs after
+  `loadFonts` (and the built-in one doesn't with `fallback = false`). pdforg builds and its tests pass
+  against it. Not tested: Linux, macOS, the web build; seeing it on screen (the Windows screen was locked).
+- **Outstanding issues:** about 33 MB of font data stays in memory on Windows (whole fonts, as ImGui needs).
+- **Next steps:** check on screen in pdforg and pdfview; build on Linux (fontconfig path) and the web.

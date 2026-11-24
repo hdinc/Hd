@@ -36,6 +36,13 @@ target_link_libraries(hd_files_test Hd)
 target_compile_options(hd_files_test PRIVATE ${HD_TEST_WARNINGS})
 add_test(NAME hd_files_test COMMAND hd_files_test ${CMAKE_CURRENT_BINARY_DIR}/files_test)
 
+# the system's CJK fallback fonts (skipped without any)
+add_executable(hd_fonts_test fonts_test.cpp)
+target_link_libraries(hd_fonts_test Hd)
+target_compile_options(hd_fonts_test PRIVATE ${HD_TEST_WARNINGS})
+add_test(NAME hd_fonts_test COMMAND hd_fonts_test)
+set_tests_properties(hd_fonts_test PROPERTIES SKIP_RETURN_CODE 77)
+
 # distance fields and curves of fonts: the library's and some of the system's
 # when they're there
 add_executable(hd_font_test font_test.cpp)
