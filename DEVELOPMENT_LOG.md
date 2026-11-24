@@ -137,3 +137,46 @@
   `.../dir with spaces/` shows each folder in the path bar. Not built on Windows.
 - **Outstanding issues:** `openUri` waits for `xdg-open`, which can block without a desktop
   environment. The real zenity and kdialog were not run.
+
+## 2026-11-24 15:20 +03:00 — File browser: places, folder mode, several files, worker listing; openFolderDialog; openUri doesn't wait
+
+- **Changes made:**
+  - `FileList` and `FileDialog` turned names into text with `path::string()`, which is the ANSI code
+    page on Windows (non-ASCII names broke). They use UTF-8 now (`toUtf8`/`fromUtf8`).
+  - `Platform::openUri` on Linux waited for `xdg-open`; without a desktop environment that runs the
+    program itself, so the app froze until it closed. It returns once the program started; a thread
+    reaps it.
+  - `FileList` is no longer copyable (a read may be in progress); `FileDialog` keeps its dialogs by
+    pointer. The Windows drive combo in the dialog is gone: drives are places now.
+- **Features implemented:**
+  - `FileList.h` without UI: `toUtf8`, `fromUtf8`, `naturalLess`, `isHidden` (dot names; Windows'
+    hidden and system attributes), `places()` (Home, the user's folders, then drives with labels on
+    Windows or `/`), `parseUserDirs` (XDG user-dirs.dirs), `typedPath` (`~`, `C:`, relative names,
+    MSYS `/c/...`, UNC), `completeFolder` (Tab).
+  - `FileList`: reads on a worker thread (`glfwPostEmptyEvent` when done; synchronous in the browser),
+    "Reading..." and error rows, `showHidden`, keys (type-ahead, arrows, Home/End, Enter, Backspace,
+    Alt+Up), multiple selection (`multiple`, `selection`; Ctrl/Shift+click, Shift+arrows), an editable
+    path bar (click its empty end or Ctrl+L; Tab completes; Enter goes; Escape stops).
+  - `FileDialog`: places and recent folders on the left (`setRecentFolders`/`recentFolders`; a
+    chosen file's folder becomes the newest), `openFolderDialog` (choose a folder: the typed one,
+    else the selected one, else the one shown), `openFilesDialog` + `dialogResults`, "New folder"
+    (save and folder modes), "Show hidden".
+  - `Platform::openFolderDialog`: `IFileOpenDialog` with `FOS_PICKFOLDERS` on Windows, zenity
+    `--file-selection --directory --filename=<start>/`, kdialog `--getexistingdirectory <start>`.
+- **How it works:** a `FileList::Listing` (shared with a detached thread) lists everything; the UI
+  thread takes it when done and filters it (`show`, hidden) itself, so the host's `show` callback
+  never runs on the worker. A read for another folder is dropped when it ends. Windows links ole32
+  and uuid now (known folders, COM dialog). On Windows a UNC path typed into the path bar is kept as
+  typed (libstdc++ doesn't know UNC roots; `lexically_normal` merged the two separators).
+- **Testing:** new `hd_filelist_test`: UTF-8 round trip, natural order, user-dirs parsing ($HOME,
+  turned-off folders, order, CRLF), typed paths (relative, `..`, `~`; Windows: `C:`, `D:\a\..\b`, UNC,
+  `/c/Windows`), completion (case, common part, one match gets a separator, files and hidden folders
+  not offered unless asked, UTF-8 names), hidden attribute on Windows, places. `hd_platform_test`:
+  fake zenity/kdialog for `openFolderDialog` (arguments, answer, cancel), and a fake `xdg-open` that
+  sleeps to check `openUri` returns at once. All Hd tests pass on Linux and Windows (MSYS2 UCRT64;
+  hd_font_test not run there). Checked by hand in pdforg on VNC: places with an XDG user dir, typed
+  path with Tab and Enter, choose a folder, open three files with Shift+click, type-ahead, Enter,
+  Backspace. Not tested: the Windows dialog and places on a real desktop, real zenity/kdialog, UNC
+  shares, New folder by hand.
+- **Outstanding issues:** the native dialogs block the frame that opens them (as before). A UNC
+  share's parent folders can't be walked up in the path bar with libstdc++.

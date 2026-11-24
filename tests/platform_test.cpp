@@ -3,6 +3,7 @@
 #include <Hd/Platform.h>
 
 #include <cctype>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -82,6 +83,27 @@ static void testDialogPrograms()
     setenv("XDG_CURRENT_DESKTOP", "KDE", 1);
     CHECK(openFilesDialog(nullptr, "Open", pdf).size() == 2);
     CHECK(fs::exists(kArgs));
+
+    // folders: zenity with --directory (a trailing slash starts inside the
+    // folder), kdialog --getexistingdirectory
+    writeScript(dir / "zenity", "printf '%s\\n' \"$@\" > '" + zArgs.string() + "'\nprintf '/home/u/My Books\\n'\n");
+    writeScript(dir / "kdialog", "printf '%s\\n' \"$@\" > '" + kArgs.string() + "'\nprintf '/srv/b\\n'\n");
+    setenv("XDG_CURRENT_DESKTOP", "GNOME", 1);
+    CHECK(openFolderDialog(nullptr, "Add folder", "/home/u") == "/home/u/My Books");
+    CHECK(readFile(zArgs).find("--directory\n") != std::string::npos);
+    CHECK(readFile(zArgs).find("--filename=/home/u/\n") != std::string::npos);
+    setenv("XDG_CURRENT_DESKTOP", "KDE", 1);
+    CHECK(openFolderDialog(nullptr, "Add folder", "/srv") == "/srv/b");
+    CHECK(readFile(kArgs).find("--getexistingdirectory\n/srv\n") != std::string::npos);
+    writeScript(dir / "kdialog", "exit 1\n");
+    CHECK(openFolderDialog(nullptr, "Add folder", "/srv").empty());
+
+    // openUri doesn't wait for the program (xdg-open may run it until it
+    // exits)
+    writeScript(dir / "xdg-open", "sleep 3\n");
+    auto t0 = std::chrono::steady_clock::now();
+    CHECK(openUri("https://example.com/"));
+    CHECK(std::chrono::steady_clock::now() - t0 < std::chrono::seconds(1));
 
     setenv("PATH", savedPath.c_str(), 1);
     if (oldDesktop) setenv("XDG_CURRENT_DESKTOP", savedDesktop.c_str(), 1);

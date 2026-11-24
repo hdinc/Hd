@@ -24,6 +24,12 @@ target_link_libraries(hd_platform_test Hd)
 target_compile_options(hd_platform_test PRIVATE ${HD_TEST_WARNINGS})
 add_test(NAME hd_platform_test COMMAND hd_platform_test)
 
+# file dialogs' system parts: UTF-8 paths, places, typed paths, completion
+add_executable(hd_filelist_test filelist_test.cpp)
+target_link_libraries(hd_filelist_test Hd)
+target_compile_options(hd_filelist_test PRIVATE ${HD_TEST_WARNINGS})
+add_test(NAME hd_filelist_test COMMAND hd_filelist_test)
+
 # locks between processes (it runs copies of itself) and atomic replacement
 add_executable(hd_files_test files_test.cpp)
 target_link_libraries(hd_files_test Hd)

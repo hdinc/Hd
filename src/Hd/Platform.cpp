@@ -20,6 +20,7 @@
 #include <commdlg.h>
 #include <dwmapi.h>
 #include <shellapi.h>
+#include <shobjidl.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
@@ -27,6 +28,8 @@
 #include <spawn.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#include <thread>
 extern char** environ;
 #endif
 
@@ -215,6 +218,42 @@ std::vector<std::string> openFilesDialog(GLFWwindow* parent, const std::string& 
     return out;
 }
 
+std::string openFolderDialog(GLFWwindow* parent, const std::string& title, const std::string& start)
+{
+    // COM may already be set up on this thread (S_FALSE), or in another
+    // mode: then it stays as it is
+    HRESULT init = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    std::string out;
+    IFileOpenDialog* dlg = nullptr;
+    if (SUCCEEDED(CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dlg)))) {
+        DWORD opts = 0;
+        dlg->GetOptions(&opts);
+        dlg->SetOptions(opts | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST);
+        std::wstring wtitle = u8(title).wstring();
+        if (!wtitle.empty()) dlg->SetTitle(wtitle.c_str());
+        if (!start.empty()) {
+            std::wstring wstart = u8(start).make_preferred().wstring();
+            IShellItem* folder = nullptr;
+            if (SUCCEEDED(SHCreateItemFromParsingName(wstart.c_str(), nullptr, IID_PPV_ARGS(&folder)))) {
+                dlg->SetFolder(folder);
+                folder->Release();
+            }
+        }
+        if (SUCCEEDED(dlg->Show(parent ? glfwGetWin32Window(parent) : nullptr))) {
+            IShellItem* item = nullptr;
+            if (SUCCEEDED(dlg->GetResult(&item))) {
+                PWSTR p = nullptr;
+                if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &p))) out = fromWide(p);
+                CoTaskMemFree(p);
+                item->Release();
+            }
+        }
+        dlg->Release();
+    }
+    if (SUCCEEDED(init)) CoUninitialize();
+    return out;
+}
+
 bool openUri(const std::string& uri)
 {
     std::wstring w = u8(uri).wstring();
@@ -259,6 +298,8 @@ std::vector<std::string> args(int argc, char** argv) { return std::vector<std::s
 bool hasFileDialog() { return false; }
 
 std::vector<std::string> openFilesDialog(GLFWwindow*, const std::string&, const std::vector<FileFilter>&, bool) { return {}; }
+
+std::string openFolderDialog(GLFWwindow*, const std::string&, const std::string&) { return {}; }
 
 bool openUri(const std::string&) { return false; }
 
@@ -307,15 +348,32 @@ std::vector<std::string> openFilesDialog(GLFWwindow*, const std::string& title, 
     return lines(run(cmd + " 2>/dev/null"));
 }
 
+std::string openFolderDialog(GLFWwindow*, const std::string& title, const std::string& start)
+{
+    std::string program = dialogProgram();
+    std::string t = quote(title.empty() ? "Choose a folder" : title);
+    std::string cmd;
+    if (program == "zenity")
+        // a trailing slash starts inside the folder
+        cmd = "zenity --file-selection --directory --title=" + t + (start.empty() ? "" : " --filename=" + quote(start + "/"));
+    else if (program == "kdialog")
+        cmd = "kdialog --title " + t + " --getexistingdirectory " + quote(start.empty() ? "." : start);
+    else
+        return {};
+    auto out = lines(run(cmd + " 2>/dev/null"));
+    return out.empty() ? std::string() : out[0];
+}
+
 bool openUri(const std::string& uri)
 {
-    // no shell: the URI is passed as one argument
+    // no shell: the URI is passed as one argument. Not waiting for it:
+    // without a desktop environment xdg-open runs the program itself, until
+    // it exits; a thread reaps it then.
     pid_t pid;
     char* argv[] = {const_cast<char*>("xdg-open"), const_cast<char*>(uri.c_str()), nullptr};
     if (posix_spawnp(&pid, "xdg-open", nullptr, nullptr, argv, environ) != 0) return false;
-    int st = 0;
-    waitpid(pid, &st, 0);
-    return WIFEXITED(st) && WEXITSTATUS(st) == 0;
+    std::thread([pid] { waitpid(pid, nullptr, 0); }).detach();
+    return true;
 }
 
 void setDarkTitleBar(GLFWwindow*, bool) {}

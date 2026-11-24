@@ -25,8 +25,14 @@ bool hasFileDialog();
 // available (hasFileDialog). On Linux it runs one of zenity and kdialog:
 // kdialog first on KDE, zenity first elsewhere.
 std::vector<std::string> openFilesDialog(GLFWwindow* parent, const std::string& title, const std::vector<FileFilter>& filters, bool multiple = true);
-// opens a URI (http, https, mailto, ...) with the system's handler. It
-// doesn't check what the URI is: callers decide what is safe to open.
+// asks for a folder, starting in start (UTF-8, may be empty); empty when
+// cancelled or when no dialog is available (hasFileDialog). Windows' folder
+// picker, zenity or kdialog.
+std::string openFolderDialog(GLFWwindow* parent, const std::string& title, const std::string& start = {});
+// opens a URI (http, https, mailto, a file or folder path) with the system's
+// handler, without waiting for it: true when the handler was started (on
+// Windows: accepted). It doesn't check what the URI is: callers decide what
+// is safe to open.
 bool openUri(const std::string& uri);
 // absolute and normal, for comparing paths. On Windows an MSYS or Cygwin
 // drive path (/c/..., /cygdrive/c/...) means that drive when it exists.

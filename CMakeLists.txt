@@ -95,7 +95,7 @@ target_include_directories(Hd
 target_link_libraries(Hd PUBLIC glad imgui hdres stb glfw glm::glm PRIVATE msdfgen nlohmann_json::nlohmann_json)
 if(WIN32)
     # file dialogs, opening URIs, the dark mode setting, dark title bars
-    target_link_libraries(Hd PRIVATE comdlg32 shell32 advapi32 dwmapi)
+    target_link_libraries(Hd PRIVATE comdlg32 shell32 advapi32 dwmapi ole32 uuid)
 endif()
 if(FREETYPE_FOUND)
     target_link_libraries(Hd PRIVATE Freetype::Freetype)

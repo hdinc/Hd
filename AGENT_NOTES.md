@@ -20,15 +20,18 @@ submodule.
     `ThemeEditor`. Also `setConfigName`/`configDir`.
   - `Fonts`: installed fonts, `FontPicker`, `loadFonts`, `setFontSize`, `monoFont`.
   - `Icons`: Font Awesome solid glyphs, merged into the UI font; `iconButton`; toolbar sizes.
-  - `Platform`: what the rest doesn't cover. UTF-8 args, native file dialogs (Win32, zenity/kdialog),
-    `openUri`, dark-mode setting, dark title bar, the system's interface font.
-  - `FileDialog`/`FileList`: an ImGui file dialog (works in the browser).
+  - `Platform`: what the rest doesn't cover. UTF-8 args, native file and folder dialogs (Win32,
+    zenity/kdialog), `openUri` (doesn't wait), dark-mode setting, dark title bar, the system's interface font.
+  - `FileDialog`/`FileList`: an ImGui file dialog (works in the browser): places and recent folders,
+    open/save/folder/several files, worker-thread listing, keys, typed paths with Tab completion, hidden
+    files, New folder. `FileList.h` also has the parts without UI (places, typedPath, completeFolder,
+    UTF-8 path helpers), tested in `hd_filelist_test`.
   - `Files`: `FileLock` (exclusive between processes: LockFileEx / flock, freed on exit) and
     `replaceFile` (temp file in the same folder, flushed, then moved over the old one).
   - `Zoom`, `Search`, `Vt100`/`TerminalView`, `Canvas2D`, `Web`.
 - `deps/`: imgui (docking branch, 1.92), glad, glad_web, hdres (resource packer), stb, msdfgen.
 - `res/`: resources packed into the library (shaders, ElenaWeb and fa-solid-900 fonts).
-- `tests/`: tests with a small CHECK macro (files, font, platform, search, theme, vt100, zoom). `files_test` runs
+- `tests/`: tests with a small CHECK macro (filelist, files, font, platform, search, theme, vt100, zoom). `files_test` runs
   copies of itself to test locks between processes. Built when Hd is the top-level project or
   with `HD_BUILD_TESTS`.
 - `web/pre.js`: the page's side of `Web.h`.
@@ -55,11 +58,13 @@ submodule.
 ## Docs
 - None yet.
 
+- Paths as text are UTF-8 everywhere (`toUtf8`/`fromUtf8`); never `path::string()` (ANSI on Windows).
+- `FileList` reads on a worker thread, but filters (`show`, hidden) on the UI thread.
+
 ## Current work
-- Scale, window geometry, dark title bar, Platform and `waitEvents` are on `master` (41b19a8). They were
-  tested on Windows through pdfview-app, and on Linux (Arch under WSL, X11) on 2026-11-24, except the
-  zenity/kdialog dialogs themselves (`hd_platform_test` runs fake ones), `openUri` and dark mode.
-- Next: build logic, pdforg and the web build against it.
+- The file browser work (2026-11-24, for pdforg's Windows port W2) is committed locally, not pushed; pdforg
+  uses it, pdfview builds against it. Not checked on a Windows desktop yet (pdforg's W3).
+- Next: build logic and the web build against it (the web build: FileList reads synchronously there).
 
 ## Ruled out
 - nativefiledialog-extended (GTK build dependency).
